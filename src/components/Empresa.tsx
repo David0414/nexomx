@@ -4,7 +4,7 @@ import { modoDemo } from '../lib/api'
 import { useFavoritos } from '../lib/favoritos'
 import { hostDe, plural, urlDe } from '../lib/formato'
 import { SIN_ESTADO } from '../lib/mexico'
-import { useSesion } from '../lib/sesion'
+import { usePerfil, useSesion } from '../lib/sesion'
 import { nombreArea, nombreGiro } from '../lib/types'
 import type { DetalleEmpresa, EmpresaResumen } from '../lib/types'
 import { Copiar, ErrorBloque, Ventana } from './Comunes'
@@ -49,6 +49,11 @@ function urlLogo(web: string) {
   return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(dominio)}&sz=128`
 }
 
+// Datos ocultos por la cuenta de prueba: no se pueden copiar, llamar ni escribir.
+export const enmascarado = (texto: string) => texto.includes('***')
+
+export const telefonoParaLlamar = (telefono: string) => telefono.split(/[,;/]/)[0].replace(/[^\d+]/g, '')
+
 export function LogoEmpresa({ nombre, web, tam = 40 }: { nombre: string; web: string | null; tam?: number }) {
   const src = web ? urlLogo(web) : null
   const [fallo, setFallo] = useState(false)
@@ -84,7 +89,9 @@ export function LogoEmpresa({ nombre, web, tam = 40 }: { nombre: string; web: st
 }
 
 export function BotonFavorito({ id, nombre, conTexto }: { id: number; nombre: string; conTexto?: boolean }) {
+  const perfil = usePerfil()
   const { ids, alternar } = useFavoritos()
+  if (perfil.demo) return null
   const activo = ids.has(id)
   const etiqueta = `${activo ? 'Quitar de' : 'Guardar en'} favoritos: ${nombre}`
 
@@ -107,7 +114,7 @@ export function BotonFavorito({ id, nombre, conTexto }: { id: number; nombre: st
         e.stopPropagation()
         alternar(id)
       }}
-      className="grid size-8 flex-none cursor-pointer place-items-center rounded-md transition-transform hover:bg-cantera active:scale-90"
+      className="grid size-11 flex-none cursor-pointer place-items-center rounded-md transition-transform hover:bg-cantera active:scale-90 md:size-8"
     >
       <Star size={17} className={activo ? 'fill-cempasuchil text-cempasuchil' : 'text-gris-2'} />
     </button>
@@ -116,7 +123,7 @@ export function BotonFavorito({ id, nombre, conTexto }: { id: number; nombre: st
 
 export function TarjetaEmpresa({ empresa, alAbrir }: { empresa: EmpresaResumen; alAbrir: (id: number) => void }) {
   return (
-    <article className="relative flex min-w-0 gap-3 rounded-lg border border-linea bg-papel p-3.5 transition-colors hover:border-jade-500">
+    <article className="relative flex min-w-0 gap-3 rounded-xl border border-linea bg-papel p-3.5 transition-colors hover:border-jade-500 active:bg-tenue">
       <LogoEmpresa nombre={empresa.nombre} web={empresa.web} tam={48} />
       <div className="min-w-0 flex-1 pr-7">
         <button
@@ -133,7 +140,7 @@ export function TarjetaEmpresa({ empresa, alAbrir }: { empresa: EmpresaResumen; 
           {empresa.telefono && <span className="text-gris"> · {empresa.telefono}</span>}
         </p>
       </div>
-      <div className="absolute top-2 right-2 z-10">
+      <div className="absolute top-0.5 right-0.5 z-10 md:top-2 md:right-2">
         <BotonFavorito id={empresa.id} nombre={empresa.nombre} />
       </div>
     </article>
@@ -147,6 +154,7 @@ export function FichaEmpresa({ id, alCerrar }: { id: number; alCerrar: () => voi
 
   useEffect(() => {
     api.detalle(id).then(setDetalle).catch((e: Error) => setError(e.message))
+      .finally(() => window.dispatchEvent(new Event('nexo:consulta')))
   }, [api, id])
 
   const empresa = detalle?.empresa
@@ -163,10 +171,21 @@ export function FichaEmpresa({ id, alCerrar }: { id: number; alCerrar: () => voi
       )}
       {detalle && empresa && (
         <>
-          <div className="mb-5 flex items-center justify-between gap-3">
+          <div className="mb-4 flex items-center justify-between gap-3">
             <LogoEmpresa nombre={empresa.nombre} web={empresa.web} tam={64} />
             <BotonFavorito id={empresa.id} nombre={empresa.nombre} conTexto />
           </div>
+
+          {(empresa.telefono && !enmascarado(empresa.telefono)) || empresa.web ? (
+            <div className="mb-5 flex gap-2 sm:hidden">
+              {empresa.telefono && !enmascarado(empresa.telefono) && (
+                <a href={`tel:${telefonoParaLlamar(empresa.telefono)}`} className="accion"><Phone size={16} aria-hidden /> Llamar</a>
+              )}
+              {empresa.web && (
+                <a href={urlDe(empresa.web)} target="_blank" rel="noreferrer noopener" className="accion"><Globe size={16} aria-hidden /> Sitio web</a>
+              )}
+            </div>
+          ) : null}
 
           <dl className="flex flex-col gap-2.5">
             {empresa.giro !== 'sin_clasificar' && (
@@ -186,8 +205,12 @@ export function FichaEmpresa({ id, alCerrar }: { id: number; alCerrar: () => voi
               <div className="flex items-center gap-2.5">
                 <dt><Phone size={14} className="text-gris" aria-label="Teléfono" /></dt>
                 <dd className="num flex items-center gap-0.5">
-                  <a href={`tel:${empresa.telefono.replace(/[^\d+]/g, '')}`}>{empresa.telefono}</a>
-                  <Copiar texto={empresa.telefono} etiqueta="teléfono" />
+                  {enmascarado(empresa.telefono) ? empresa.telefono : (
+                    <>
+                      <a href={`tel:${telefonoParaLlamar(empresa.telefono)}`}>{empresa.telefono}</a>
+                      <Copiar texto={empresa.telefono} etiqueta="teléfono" />
+                    </>
+                  )}
                 </dd>
               </div>
             )}
@@ -217,15 +240,19 @@ export function FichaEmpresa({ id, alCerrar }: { id: number; alCerrar: () => voi
                 {c.correo && (
                   <p className="mt-1 flex min-w-0 items-center gap-2">
                     <Mail size={14} className="flex-none text-gris" aria-hidden />
-                    <a href={`mailto:${c.correo}`} className="truncate hover:text-jade-500">{c.correo}</a>
-                    <Copiar texto={c.correo} etiqueta="correo" />
+                    {enmascarado(c.correo) ? <span className="truncate">{c.correo}</span> : (
+                      <>
+                        <a href={`mailto:${c.correo}`} className="truncate hover:text-jade-500">{c.correo}</a>
+                        <Copiar texto={c.correo} etiqueta="correo" />
+                      </>
+                    )}
                   </p>
                 )}
                 {c.telefono_directo && (
                   <p className="num mt-1 flex items-center gap-2">
                     <Phone size={14} className="flex-none text-gris" aria-hidden />
                     {c.telefono_directo}
-                    <Copiar texto={c.telefono_directo} etiqueta="teléfono" />
+                    {!enmascarado(c.telefono_directo) && <Copiar texto={c.telefono_directo} etiqueta="teléfono" />}
                   </p>
                 )}
               </li>

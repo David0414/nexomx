@@ -46,7 +46,7 @@ export function MapaEstados({ conteos, seleccionado, alElegir, unidad = '', oscu
         const activo = seleccionado === m.nombre
         const tono = activo ? 'bg-obsidiana text-white' : rampa[paso(valor, maximo)]
         const posicion = { gridColumn: m.col + 1, gridRow: m.fila + 1 }
-        const clase = `grid aspect-square place-items-center rounded-[3px] text-[11px] leading-none font-medium ${tono}`
+        const clase = `grid aspect-square place-items-center rounded-[3px] leading-none font-medium ${m.clave.length > 3 ? 'text-[9.5px] md:text-[10px]' : 'text-[11px]'} ${tono}`
 
         if (!alElegir) {
           return <span key={m.clave} style={posicion} className={clase}>{m.clave}</span>

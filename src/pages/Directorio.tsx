@@ -1,13 +1,13 @@
-import { ChevronLeft, ChevronRight, Map as IconoMapa, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Lock, Mail, Phone, SlidersHorizontal, X } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Copiar, ErrorBloque, Pestanas } from '../components/Comunes'
-import { BotonFavorito, FichaEmpresa, LogoEmpresa, RejillaCarga, TarjetaEmpresa } from '../components/Empresa'
+import { Copiar, ErrorBloque, Pestanas, Ventana } from '../components/Comunes'
+import { BotonFavorito, enmascarado, FichaEmpresa, LogoEmpresa, RejillaCarga, TarjetaEmpresa, telefonoParaLlamar } from '../components/Empresa'
 import { LeyendaMapa, MapaEstados } from '../components/MapaEstados'
 import { ErrorApp, TAM_PAGINA } from '../lib/api'
 import { n, plural } from '../lib/formato'
 import { SIN_ESTADO } from '../lib/mexico'
-import { useSesion } from '../lib/sesion'
+import { usePerfil, useSesion } from '../lib/sesion'
 import { AREAS, GIROS, nombreArea, nombreGiro } from '../lib/types'
 import type { Area, ContactoFila, Conteos, EmpresaFila, Filtros, Giro } from '../lib/types'
 
@@ -121,14 +121,58 @@ function CuerpoCarga() {
   )
 }
 
+function ListaPersonas({ filas, cargando, alAbrir }: {
+  filas: ContactoFila[]
+  cargando: boolean
+  alAbrir: (id: number) => void
+}) {
+  if (cargando && !filas.length) return <div className="grid gap-3 md:hidden"><RejillaCarga cuantas={5} /></div>
+
+  return (
+    <ul className="flex flex-col gap-3 md:hidden">
+      {filas.map((c) => {
+        const correoVisible = c.correo && !enmascarado(c.correo)
+        const telefonoVisible = c.telefono && !enmascarado(c.telefono)
+        const oculto = (c.correo && !correoVisible) || (c.telefono && !telefonoVisible)
+        return (
+          <li key={c.id} className="rounded-xl border border-linea p-3.5">
+            <div className="flex gap-3">
+              <LogoEmpresa nombre={c.empresa} web={c.web} tam={44} />
+              <button type="button" onClick={() => alAbrir(c.empresa_id)} className="min-w-0 flex-1 cursor-pointer text-left active:opacity-70">
+                <p className="truncate text-[15px] leading-5 font-semibold">{c.nombre ?? c.empresa}</p>
+                <p className="truncate text-[13px] leading-[18px] text-gris">{c.puesto ?? nombreArea(c.area)}</p>
+                <p className="mt-1 truncate text-[13px] leading-[18px] font-medium">{c.empresa}</p>
+                <p className="truncate text-xs leading-4 text-gris">{c.estado}{c.giro !== 'sin_clasificar' && ` · ${nombreGiro(c.giro)}`}</p>
+              </button>
+              <div className="-mt-1.5 -mr-1.5"><BotonFavorito id={c.empresa_id} nombre={c.empresa} /></div>
+            </div>
+
+            {oculto ? (
+              <p className="mt-3 flex items-center gap-2 rounded-[10px] bg-tenue px-3 py-2.5 text-[13px] leading-[18px] text-gris">
+                <Lock size={14} className="flex-none" aria-hidden />
+                <span className="min-w-0 truncate">{c.correo ?? c.telefono}</span>
+              </p>
+            ) : (correoVisible || telefonoVisible) && (
+              <div className="mt-3 flex gap-2">
+                {telefonoVisible && <a href={`tel:${telefonoParaLlamar(c.telefono!)}`} className="accion"><Phone size={16} aria-hidden /> Llamar</a>}
+                {correoVisible && <a href={`mailto:${c.correo}`} className="accion"><Mail size={16} aria-hidden /> Correo</a>}
+              </div>
+            )}
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
+
 function TablaPersonas({ filas, cargando, alAbrir }: {
   filas: ContactoFila[]
   cargando: boolean
   alAbrir: (id: number) => void
 }) {
   return (
-    <table className="w-full table-fixed">
-      <thead className="hidden text-left text-xs text-gris md:table-header-group">
+    <table className="hidden w-full table-fixed md:table">
+      <thead className="text-left text-xs text-gris">
         <tr className="h-9">
           <th scope="col" className="w-[42%] pr-4 font-medium">Empresa</th>
           <th scope="col" className="w-[22%] pr-4 font-medium">Persona</th>
@@ -138,8 +182,8 @@ function TablaPersonas({ filas, cargando, alAbrir }: {
       {cargando && !filas.length ? <CuerpoCarga /> : (
         <tbody>
           {filas.map((c) => (
-            <tr key={c.id} className="block border-t border-regla py-2.5 hover:bg-tenue md:table-row md:h-[64px] md:py-0">
-              <td className="block pr-3 md:table-cell">
+            <tr key={c.id} className="h-[64px] border-t border-regla hover:bg-tenue">
+              <td className="pr-3">
                 <div className="flex items-center gap-2.5">
                   <LogoEmpresa nombre={c.empresa} web={c.web} tam={36} />
                   <div className="min-w-0 flex-1">
@@ -151,15 +195,19 @@ function TablaPersonas({ filas, cargando, alAbrir }: {
                   <BotonFavorito id={c.empresa_id} nombre={c.empresa} />
                 </div>
               </td>
-              <td className="block pt-1.5 pr-4 md:table-cell md:pt-0">
+              <td className="pr-4">
                 <p className="truncate font-medium">{c.nombre ?? <span className="text-gris-2">—</span>}</p>
                 <p className="truncate text-xs text-gris">{c.puesto ?? nombreArea(c.area)}</p>
               </td>
-              <td className="block pt-1 md:table-cell md:pt-0">
+              <td>
                 {c.correo ? (
                   <div className="flex items-center gap-0.5">
-                    <a href={`mailto:${c.correo}`} className="truncate hover:text-jade-500">{c.correo}</a>
-                    <Copiar texto={c.correo} etiqueta="correo" />
+                    {enmascarado(c.correo) ? <span className="truncate">{c.correo}</span> : (
+                      <>
+                        <a href={`mailto:${c.correo}`} className="truncate hover:text-jade-500">{c.correo}</a>
+                        <Copiar texto={c.correo} etiqueta="correo" />
+                      </>
+                    )}
                   </div>
                 ) : <p className="text-gris-2">—</p>}
                 <p className="num truncate text-xs text-gris">
@@ -190,6 +238,7 @@ function RejillaEmpresas({ filas, cargando, alAbrir }: {
 
 export function Directorio() {
   const { api } = useSesion()
+  const perfil = usePerfil()
   const [parametros] = useSearchParams()
   const q = useDemorado(parametros.get('q') ?? '', 500)
 
@@ -241,6 +290,7 @@ export function Directorio() {
       })
       .finally(() => {
         if (mio === turno.current) setCargando(false)
+        window.dispatchEvent(new Event('nexo:consulta'))
       })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [api, clave, vista, pagina, recarga])
@@ -250,6 +300,7 @@ export function Directorio() {
   const enArea = `${area ? ` de ${nombreArea(area).toLowerCase()}` : ''}${giro ? ` · ${nombreGiro(giro)}` : ''}`
   const hayFiltros = Boolean(estado || area || giro)
   const vacio = !cargando && !error && total === 0
+  const cuantosFiltros = [estado, area, giro].filter(Boolean).length
   const desde = total ? pagina * TAM_PAGINA + 1 : 0
   const hasta = Math.min((pagina + 1) * TAM_PAGINA, total)
 
@@ -261,9 +312,9 @@ export function Directorio() {
   )
 
   return (
-    <div className="px-4 pt-1 pb-8 md:px-6 md:pt-5">
+    <div className="px-4 pt-4 pb-8 md:px-6 md:pt-5">
       <div className="mb-3">
-        <h1 className="text-[22px] leading-7 font-semibold">Directorio</h1>
+        <h1 className="text-[20px] leading-7 font-semibold md:text-[22px]">Directorio</h1>
         <p className="mt-0.5 min-h-5 text-gris">
           {conteos && `${plural(total, unidad[0], unidad[1])}${enArea}${lugar}`}
         </p>
@@ -271,6 +322,7 @@ export function Directorio() {
 
       <Pestanas
         etiqueta="Qué ver"
+        repartir
         valor={vista}
         alCambiar={reiniciar(setVista)}
         opciones={[
@@ -281,9 +333,10 @@ export function Directorio() {
 
       <div className="mt-4 grid gap-6 xl:grid-cols-[minmax(0,1fr)_384px]">
         <div className="min-w-0">
-          <div className="mb-3 flex items-center gap-2 overflow-x-auto pb-px">
-            <button type="button" className="filtro xl:hidden" aria-pressed={mapaAbierto} aria-expanded={mapaAbierto} onClick={() => setMapaAbierto(!mapaAbierto)}>
-              <IconoMapa size={14} /> Estado, giro y área
+          <div className="sin-barra sticky top-0 z-10 -mx-4 mb-3 flex items-center gap-2 overflow-x-auto bg-papel px-4 py-2 md:static md:mx-0 md:px-0 md:py-0">
+            <button type="button" className="filtro xl:hidden" onClick={() => setMapaAbierto(true)}>
+              <SlidersHorizontal size={15} aria-hidden /> Filtros
+              {cuantosFiltros > 0 && <span className="num grid size-5 place-items-center rounded-full bg-jade-500 text-xs font-semibold text-white">{cuantosFiltros}</span>}
             </button>
             <button type="button" className="filtro" aria-pressed={conCorreo} onClick={() => reiniciar(setConCorreo)(!conCorreo)}>
               Con correo
@@ -308,8 +361,6 @@ export function Directorio() {
             )}
           </div>
 
-          {mapaAbierto && <div className="mb-4 xl:hidden">{rieles}</div>}
-
           {error ? (
             <ErrorBloque mensaje={error} alReintentar={() => setRecarga((r) => r + 1)} />
           ) : vacio ? (
@@ -326,19 +377,25 @@ export function Directorio() {
               )}
             </div>
           ) : vista === 'personas' ? (
-            <TablaPersonas filas={personas} cargando={cargando} alAbrir={setAbierta} />
+            <>
+              <ListaPersonas filas={personas} cargando={cargando} alAbrir={setAbierta} />
+              <TablaPersonas filas={personas} cargando={cargando} alAbrir={setAbierta} />
+            </>
           ) : (
             <RejillaEmpresas filas={empresas} cargando={cargando} alAbrir={setAbierta} />
           )}
 
           {total > 0 && !error && (
             <div className="mt-3 flex items-center justify-between border-t border-regla pt-3">
-              <p className="num text-gris">{n(desde)}–{n(hasta)} de {n(total)}</p>
+              <p className="num text-gris">
+                {n(desde)}–{n(hasta)} de {n(total)}
+                {perfil.demo && hasta < total && <span className="block text-xs">Con tu cuenta ves todos los resultados</span>}
+              </p>
               <div className="flex gap-2">
-                <button type="button" aria-label="Página anterior" className="boton w-9 px-0" disabled={pagina === 0} onClick={() => setPagina((p) => p - 1)}>
+                <button type="button" aria-label="Página anterior" className="boton w-11 px-0 md:w-9" disabled={pagina === 0} onClick={() => setPagina((p) => p - 1)}>
                   <ChevronLeft size={16} />
                 </button>
-                <button type="button" aria-label="Página siguiente" className="boton w-9 px-0" disabled={hasta >= total} onClick={() => setPagina((p) => p + 1)}>
+                <button type="button" aria-label="Página siguiente" className="boton w-11 px-0 md:w-9" disabled={hasta >= total || perfil.demo} onClick={() => setPagina((p) => p + 1)}>
                   <ChevronRight size={16} />
                 </button>
               </div>
@@ -350,6 +407,21 @@ export function Directorio() {
       </div>
 
       {abierta !== null && <FichaEmpresa id={abierta} alCerrar={() => setAbierta(null)} />}
+
+      {mapaAbierto && (
+        <Ventana
+          titulo="Filtros"
+          lateral
+          alCerrar={() => setMapaAbierto(false)}
+          pie={
+            <button type="button" className="boton boton-primario h-12 w-full" onClick={() => setMapaAbierto(false)}>
+              Ver {plural(total, unidad[0], unidad[1])}
+            </button>
+          }
+        >
+          {rieles}
+        </Ventana>
+      )}
     </div>
   )
 }

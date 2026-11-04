@@ -63,7 +63,82 @@ body {
 }
 
 dialog::backdrop {
-  background: rgb(16 25 23 / 0.4);
+  background: rgb(16 25 23 / 0.55);
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Hoja inferior en celular; ventana centrada o panel lateral desde 640 px. */
+.hoja {
+  width: 100%;
+  max-width: 100%;
+  max-height: 92dvh;
+  margin: auto 0 0;
+  padding-bottom: env(safe-area-inset-bottom);
+  border-radius: 18px 18px 0 0;
+  overflow: hidden;
+  background: var(--color-papel);
+  color: var(--color-obsidiana);
+}
+.hoja[open] {
+  animation: subir 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.hoja-alta {
+  height: 92dvh;
+}
+
+@keyframes subir {
+  from {
+    transform: translateY(32px);
+    opacity: 0;
+  }
+}
+
+@media (min-width: 640px) {
+  .hoja {
+    width: calc(100% - 32px);
+    max-width: 480px;
+    margin: auto;
+    border-radius: 12px;
+  }
+  .hoja-alta {
+    width: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    margin: 0 0 0 auto;
+    border-radius: 0;
+  }
+}
+
+.sin-barra {
+  scrollbar-width: none;
+}
+.sin-barra::-webkit-scrollbar {
+  display: none;
+}
+
+/* En celular todo crece: se toca con el pulgar y los campos de 16 px evitan el zoom de iOS. */
+@media (max-width: 767px) {
+  body {
+    font-size: 15px;
+    line-height: 22px;
+  }
+  .boton {
+    height: 44px;
+  }
+  .filtro {
+    height: 40px;
+    padding: 0 14px;
+    border-radius: 999px;
+    font-size: 14px;
+  }
+  .campo {
+    height: 48px;
+    font-size: 16px;
+  }
 }
 
 @layer components {
@@ -177,6 +252,26 @@ dialog::backdrop {
   .filtro[aria-pressed="true"]:hover,
   .filtro-activo:hover {
     background: var(--color-jade-700);
+  }
+
+  .accion {
+    display: inline-flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-width: 0;
+    height: 42px;
+    border-radius: 10px;
+    background: var(--color-jade-50);
+    color: var(--color-jade-700);
+    font-size: 14px;
+    font-weight: 600;
+    transition: background-color 120ms, transform 80ms;
+  }
+  .accion:active {
+    background: var(--color-jade-100);
+    transform: scale(0.98);
   }
 
   .hueso {

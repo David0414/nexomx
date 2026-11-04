@@ -108,13 +108,14 @@ const contar = <T,>(filas: T[], clave: (fila: T) => string) => {
 const hace = (minutos: number) => new Date(Date.now() - minutos * 60000).toISOString()
 
 const clientes: Cliente[] = [
-  { id: 'd1', nombre: 'Regina Quiroz', empresa: 'Lubricantes Cerro Azul', correo: 'regina@lubricantescerroazul.example', activo: true, vence_el: sumarDias(hoy(), 142), limite_diario: 1000, ultimo_acceso: hace(12), creado_el: hace(90000), uso_hoy: 860 },
-  { id: 'd2', nombre: 'Mauricio Elizondo', empresa: 'Rodamientos Norteños', correo: 'mauricio@rodamientosnortenos.example', activo: true, vence_el: sumarDias(hoy(), 6), limite_diario: 1000, ultimo_acceso: hace(190), creado_el: hace(80000), uso_hoy: 225 },
-  { id: 'd3', nombre: 'Sofía Bretón', empresa: 'Empaques Industriales del Centro', correo: 'sofia@empaquescentro.example', activo: true, vence_el: sumarDias(hoy(), 12), limite_diario: 500, ultimo_acceso: hace(2900), creado_el: hace(70000), uso_hoy: 0 },
-  { id: 'd4', nombre: 'Ernesto Palacios', empresa: 'Seguridad Industrial Palacios', correo: 'ernesto@segpalacios.example', activo: true, vence_el: sumarDias(hoy(), -3), limite_diario: 1000, ultimo_acceso: hace(7000), creado_el: hace(120000), uso_hoy: 0 },
-  { id: 'd5', nombre: 'Lorena Treviño', empresa: 'Consultoría LT', correo: 'lorena@consultorialt.example', activo: true, vence_el: sumarDias(hoy(), 58), limite_diario: 1000, ultimo_acceso: hace(45), creado_el: hace(30000), uso_hoy: 350 },
-  { id: 'd6', nombre: 'Andrés Beltrán', empresa: 'Beltrán Herramientas', correo: 'andres@beltranherramientas.example', activo: false, vence_el: sumarDias(hoy(), 40), limite_diario: 1000, ultimo_acceso: hace(30000), creado_el: hace(100000), uso_hoy: 0 },
-  { id: 'd7', nombre: 'Patricia Guerra', empresa: null, correo: 'patricia.guerra@correo.example', activo: true, vence_el: null, limite_diario: 2000, ultimo_acceso: null, creado_el: hace(600), uso_hoy: 0 },
+  { id: 'd1', nombre: 'Regina Quiroz', empresa: 'Lubricantes Cerro Azul', correo: 'regina@lubricantescerroazul.example', activo: true, vence_el: sumarDias(hoy(), 142), limite_diario: 1000, ultimo_acceso: hace(12), creado_el: hace(90000), uso_hoy: 860, demo: false, ocultar_contacto: false, limite_consultas: 10 },
+  { id: 'd2', nombre: 'Mauricio Elizondo', empresa: 'Rodamientos Norteños', correo: 'mauricio@rodamientosnortenos.example', activo: true, vence_el: sumarDias(hoy(), 6), limite_diario: 1000, ultimo_acceso: hace(190), creado_el: hace(80000), uso_hoy: 225, demo: false, ocultar_contacto: false, limite_consultas: 10 },
+  { id: 'd3', nombre: 'Sofía Bretón', empresa: 'Empaques Industriales del Centro', correo: 'sofia@empaquescentro.example', activo: true, vence_el: sumarDias(hoy(), 12), limite_diario: 500, ultimo_acceso: hace(2900), creado_el: hace(70000), uso_hoy: 0, demo: false, ocultar_contacto: false, limite_consultas: 10 },
+  { id: 'd4', nombre: 'Ernesto Palacios', empresa: 'Seguridad Industrial Palacios', correo: 'ernesto@segpalacios.example', activo: true, vence_el: sumarDias(hoy(), -3), limite_diario: 1000, ultimo_acceso: hace(7000), creado_el: hace(120000), uso_hoy: 0, demo: false, ocultar_contacto: false, limite_consultas: 10 },
+  { id: 'd5', nombre: 'Lorena Treviño', empresa: 'Consultoría LT', correo: 'lorena@consultorialt.example', activo: true, vence_el: sumarDias(hoy(), 58), limite_diario: 1000, ultimo_acceso: hace(45), creado_el: hace(30000), uso_hoy: 350, demo: false, ocultar_contacto: false, limite_consultas: 10 },
+  { id: 'd6', nombre: 'Andrés Beltrán', empresa: 'Beltrán Herramientas', correo: 'andres@beltranherramientas.example', activo: false, vence_el: sumarDias(hoy(), 40), limite_diario: 1000, ultimo_acceso: hace(30000), creado_el: hace(100000), uso_hoy: 0, demo: false, ocultar_contacto: false, limite_consultas: 10 },
+  { id: 'd7', nombre: 'Patricia Guerra', empresa: null, correo: 'patricia.guerra@correo.example', activo: true, vence_el: null, limite_diario: 2000, ultimo_acceso: null, creado_el: hace(600), uso_hoy: 0, demo: false, ocultar_contacto: false, limite_consultas: 10 },
+  { id: 'd8', nombre: 'Cuenta de prueba', empresa: null, correo: 'demo@nexomx.mx', activo: true, vence_el: null, limite_diario: 1000, ultimo_acceso: hace(30), creado_el: hace(900), uso_hoy: 0, demo: true, ocultar_contacto: true, limite_consultas: 10 },
 ]
 
 const actividad: Actividad[] = [
@@ -138,17 +139,30 @@ const favoritos = new Set(empresas.filter((e) => e.num_contactos > 1).slice(3, 7
 
 const claveDemo = () => 'k7Hn2vQpX4mRtz'
 
+const consultasDemo = new Set<string>()
+const limiteDemo = () => clientes.find((c) => c.demo)?.limite_consultas ?? 10
+
+function gastar(f: Filtros) {
+  if (!perfil?.demo || !(f.q || f.estado || f.area || f.giro)) return
+  const clave = JSON.stringify(f)
+  if (!consultasDemo.has(clave) && consultasDemo.size >= limiteDemo()) throw new ErrorApp('demo_agotada')
+  consultasDemo.add(clave)
+}
+
 export const apiDemo: Api = {
   async sesion() {
     // ?demo=admin o ?demo=cliente entra directo, para revisar pantallas.
     const rol = new URLSearchParams(location.search).get('demo')
-    if (rol && !perfil) await apiDemo.entrar(rol === 'admin' ? 'admin@nexomx.example' : 'regina@lubricantescerroazul.example', '')
+    if (rol && !perfil) await apiDemo.entrar(rol === 'admin' ? 'admin@nexomx.example' : rol === 'prueba' ? 'prueba' : 'regina@lubricantescerroazul.example', '')
     return perfil
   },
   async entrar(correo) {
+    const base = { activo: true, demo: false, ocultar_contacto: false, limite_consultas: 10 }
     perfil = correo.includes('admin')
-      ? { id: 'adm', nombre: 'David Mendoza', empresa: 'NexoMx', correo, rol: 'admin', activo: true, vence_el: null, limite_diario: 0 }
-      : { id: 'd1', nombre: 'Regina Quiroz', empresa: 'Lubricantes Cerro Azul', correo, rol: 'cliente', activo: true, vence_el: sumarDias(hoy(), 142), limite_diario: 1000 }
+      ? { ...base, id: 'adm', nombre: 'David Mendoza', empresa: 'NexoMx', correo, rol: 'admin', vence_el: null, limite_diario: 0 }
+      : correo === 'prueba'
+        ? { ...base, id: 'd8', nombre: 'Invitado', empresa: null, correo: 'demo@nexomx.mx', rol: 'cliente', vence_el: null, limite_diario: 1000, demo: true, ocultar_contacto: true }
+        : { ...base, id: 'd1', nombre: 'Regina Quiroz', empresa: 'Lubricantes Cerro Azul', correo, rol: 'cliente', vence_el: sumarDias(hoy(), 142), limite_diario: 1000 }
     return perfil
   },
   async salir() {
@@ -156,8 +170,18 @@ export const apiDemo: Api = {
   },
   async cambiarClave() {},
   async contactos(f, pagina) {
+    gastar(f)
     const base = contactosBase(f).filter((c) => (!f.estado || c.estado === f.estado) && (!f.area || c.area === f.area))
-    return { total: base.length, filas: base.slice(pagina * TAM_PAGINA, (pagina + 1) * TAM_PAGINA) }
+    const filas = base.slice(pagina * TAM_PAGINA, (pagina + 1) * TAM_PAGINA)
+    if (!perfil?.ocultar_contacto) return { total: base.length, filas }
+    return {
+      total: base.length,
+      filas: filas.map((c) => ({
+        ...c,
+        correo: c.correo && `${c.correo.slice(0, 2)}***@${c.correo.split('@')[1]}`,
+        telefono: c.telefono && `${c.telefono.slice(0, 3)} *** ****`,
+      })),
+    }
   },
   async empresas(f, pagina) {
     const base = empresasBase(f).filter((e) => (!f.estado || e.estado === f.estado) && (!f.giro || e.giro === f.giro))
@@ -191,6 +215,12 @@ export const apiDemo: Api = {
   },
   async usoHoy() {
     return 860
+  },
+  async demoEstado() {
+    return { usadas: consultasDemo.size, limite: limiteDemo() }
+  },
+  async ajustarDemo(limite, ocultar) {
+    Object.assign(clientes.find((c) => c.demo)!, { limite_consultas: limite, ocultar_contacto: ocultar })
   },
   async favoritos() {
     return [...favoritos].flatMap((id) => empresas.filter((e) => e.id === id))
@@ -320,7 +350,7 @@ export const apiDemo: Api = {
   async crearCliente(datos) {
     if (clientes.some((c) => c.correo === datos.correo)) throw new ErrorApp('correo_duplicado')
     const id = `d${clientes.length + 1}`
-    clientes.unshift({ ...datos, id, empresa: datos.empresa || null, activo: true, ultimo_acceso: null, creado_el: new Date().toISOString(), uso_hoy: 0 })
+    clientes.unshift({ ...datos, id, empresa: datos.empresa || null, activo: true, ultimo_acceso: null, creado_el: new Date().toISOString(), uso_hoy: 0, demo: false, ocultar_contacto: false, limite_consultas: 10 })
     return { id, correo: datos.correo, clave: claveDemo() }
   },
   async nuevaClave(id) {

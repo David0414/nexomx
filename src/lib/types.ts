@@ -50,6 +50,9 @@ export interface Perfil {
   activo: boolean
   vence_el: string | null
   limite_diario: number
+  demo: boolean
+  ocultar_contacto: boolean
+  limite_consultas: number
 }
 
 export interface Filtros {
@@ -134,6 +137,9 @@ export interface Cliente {
   ultimo_acceso: string | null
   creado_el: string
   uso_hoy: number
+  demo: boolean
+  ocultar_contacto: boolean
+  limite_consultas: number
 }
 
 export interface NuevoCliente {
@@ -226,6 +232,8 @@ export interface Api {
   conteos(filtros: Filtros): Promise<Conteos>
   detalle(id: number): Promise<DetalleEmpresa>
   usoHoy(): Promise<number>
+  demoEstado(): Promise<{ usadas: number; limite: number }>
+  ajustarDemo(limite: number, ocultar: boolean): Promise<void>
   favoritos(): Promise<EmpresaFila[]>
   alternarFavorito(id: number): Promise<boolean>
   destacadas(): Promise<EmpresaResumen[]>

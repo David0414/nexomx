@@ -16,7 +16,7 @@ Sin claves de Supabase arranca en modo demostración con datos ficticios. Un cor
 ### 1. Supabase
 
 1. Crea un proyecto en [supabase.com](https://supabase.com), en la región más cercana a México.
-2. En **SQL Editor**, pega y ejecuta `supabase/migrations/0001_esquema.sql`, `0002_favoritos.sql` y `0003_panel_admin.sql`, `0004_edicion_admin.sql` y `0005_giros.sql`, en ese orden.
+2. En **SQL Editor**, pega y ejecuta `supabase/migrations/0001_esquema.sql`, `0002_favoritos.sql` y `0003_panel_admin.sql`, `0004_edicion_admin.sql`, `0005_giros.sql` y `0006_cuenta_demo.sql`, en ese orden.
 3. En **Authentication > Sign In / Providers**, desactiva **Allow new users to sign up**. Así solo tú creas cuentas.
 4. En la misma sección, sube la longitud mínima de contraseña a 10.
 

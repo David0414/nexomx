@@ -23,7 +23,7 @@ export function Favoritos() {
   useEffect(cargar, [cargar, version])
 
   return (
-    <div className="px-4 pt-1 pb-8 md:px-6 md:pt-5">
+    <div className="px-4 pt-4 pb-8 md:px-6 md:pt-5">
       <div className="mb-4">
         <h1 className="text-[22px] leading-7 font-semibold">Favoritos</h1>
         <p className="mt-0.5 min-h-5 text-gris">

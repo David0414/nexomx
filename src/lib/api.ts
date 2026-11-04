@@ -14,6 +14,9 @@ const MENSAJES: Record<string, string> = {
   sin_perfil: 'Esta cuenta no tiene acceso a NexoMx.',
   empresa_no_encontrada: 'Esa empresa ya no está en el directorio.',
   limite_favoritos: 'Llegaste a 200 favoritos. Quita alguno para guardar otro.',
+  demo_agotada: 'Terminaste tus consultas de prueba. Escríbele a tu asesor de NexoMx para activar tu cuenta.',
+  demo_pagina: 'La cuenta de prueba muestra solo los primeros resultados.',
+  demo_favoritos: 'Los favoritos se activan con tu cuenta.',
   nombre_requerido: 'Escribe el nombre de la empresa.',
   contacto_incompleto: 'Escribe al menos el nombre o el correo de la persona.',
   correo_invalido: 'Revisa el correo: parece incompleto.',
@@ -52,7 +55,7 @@ function crearApiSupabase(url: string, anon: string): Api {
   const perfilDe = async (id: string) => {
     const { data } = await supabase
       .from('perfiles')
-      .select('id, nombre, empresa, correo, rol, activo, vence_el, limite_diario')
+      .select('id, nombre, empresa, correo, rol, activo, vence_el, limite_diario, demo, ocultar_contacto, limite_consultas')
       .eq('id', id)
       .maybeSingle()
     return data as Perfil | null
@@ -85,6 +88,8 @@ function crearApiSupabase(url: string, anon: string): Api {
     conteos: (f) => rpc('conteos', parametros(f)),
     detalle: (id) => rpc('detalle_empresa', { p_id: id }),
     usoHoy: () => rpc('uso_hoy'),
+    demoEstado: () => rpc('demo_estado'),
+    ajustarDemo: (limite, ocultar) => rpc('admin_demo', { p_limite: limite, p_ocultar: ocultar }),
     favoritos: () => rpc('mis_favoritos'),
     alternarFavorito: (id) => rpc('alternar_favorito', { p_empresa_id: id }),
     destacadas: () => rpc('empresas_destacadas'),

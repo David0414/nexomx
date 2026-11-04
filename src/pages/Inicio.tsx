@@ -31,7 +31,7 @@ function Encabezado({ titulo, enlace, texto }: { titulo: string; enlace?: string
     <div className="mb-3 flex items-baseline justify-between gap-4">
       <h2 className="text-base font-semibold">{titulo}</h2>
       {enlace && (
-        <Link to={enlace} className="inline-flex flex-none items-center gap-1 font-medium text-jade-500 hover:underline">
+        <Link to={enlace} className="-my-3 inline-flex flex-none items-center gap-1 py-3 font-medium text-jade-500 hover:underline">
           {texto} <ArrowRight size={14} />
         </Link>
       )}
@@ -72,9 +72,9 @@ export function Inicio() {
   const primerNombre = perfil.nombre.split(' ')[0]
 
   return (
-    <div className="px-4 pt-1 pb-8 md:px-6 md:pt-5">
-      <div className="mb-5">
-        <h1 className="text-[22px] leading-7 font-semibold">Hola, {primerNombre}</h1>
+    <div className="px-4 pt-4 pb-8 md:px-6 md:pt-5">
+      <div className="mb-4 md:mb-5">
+        <h1 className="text-[20px] leading-7 font-semibold md:text-[22px]">Hola, {primerNombre}</h1>
         <p className="mt-0.5 min-h-5 text-gris">
           {conteos && `${n(conteos.empresas)} empresas y ${n(conteos.personas)} personas para contactar`}
         </p>
@@ -82,19 +82,19 @@ export function Inicio() {
 
       {error && <div className="mb-4"><ErrorBloque mensaje={error} alReintentar={() => setRecarga((r) => r + 1)} /></div>}
 
-      <div className="flex flex-col gap-7 xl:grid xl:grid-cols-[minmax(0,1fr)_384px] xl:gap-6">
+      <div className="flex flex-col gap-6 md:gap-7 xl:grid xl:grid-cols-[minmax(0,1fr)_384px] xl:gap-6">
         <div className="contents xl:flex xl:min-w-0 xl:flex-col xl:gap-7">
           <section className="order-1 xl:order-none">
             <Encabezado titulo="¿A quién quieres contactar?" enlace="/directorio" texto="Ver todos" />
-            <ul className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <ul className="grid grid-cols-2 gap-2.5 md:gap-3 lg:grid-cols-4">
               {ACCESOS.map(({ id, nombre, icono: Icono }) => (
                 <li key={id}>
                   <Link
                     to={`/directorio?area=${id}`}
-                    className="flex h-full flex-col gap-2 rounded-lg border border-linea p-3.5 transition-colors hover:border-jade-500 hover:bg-jade-50"
+                    className="flex h-full flex-col gap-1.5 rounded-xl border border-linea p-3 transition-colors hover:border-jade-500 hover:bg-jade-50 active:bg-jade-50 md:gap-2 md:p-3.5"
                   >
                     <Icono size={22} strokeWidth={1.75} className="text-jade-500" aria-hidden />
-                    <span className="font-semibold">{nombre}</span>
+                    <span className="leading-5 font-semibold">{nombre}</span>
                     <span className="num text-[13px] text-gris">
                       {conteos ? `${n(conteos.areas[id] ?? 0)} personas` : ' '}
                     </span>
@@ -106,7 +106,7 @@ export function Inicio() {
 
           <section className="order-3 xl:order-none">
             <Encabezado titulo="¿De qué giro?" />
-            <ul className="flex flex-wrap gap-2">
+            <ul className="sin-barra -mx-4 flex gap-2 overflow-x-auto px-4 md:mx-0 md:flex-wrap md:overflow-visible md:px-0">
               {GIROS.filter((g) => g.id !== 'sin_clasificar' && (conteos?.giros[g.id] ?? 0) > 0)
                 .sort((a, b) => (conteos?.giros[b.id] ?? 0) - (conteos?.giros[a.id] ?? 0))
                 .map((g) => (
@@ -119,7 +119,7 @@ export function Inicio() {
             </ul>
           </section>
 
-          <section className="order-3 xl:order-none">
+          {!perfil.demo && <section className="order-3 xl:order-none">
             <Encabezado titulo="Tus favoritos" enlace={favoritas?.length ? '/favoritos' : undefined} texto="Ver todos" />
             {favoritas?.length === 0 && (
               <div className="flex items-center gap-3 rounded-lg border border-dashed border-control px-4 py-3">
@@ -132,7 +132,7 @@ export function Inicio() {
                 {favoritas.slice(0, 4).map((e) => <TarjetaEmpresa key={e.id} empresa={e} alAbrir={setAbierta} />)}
               </div>
             )}
-          </section>
+          </section>}
 
           <section className="order-4 xl:order-none">
             <Encabezado titulo="Empresas con más contactos" enlace="/directorio?vista=empresas" texto="Ver empresas" />
@@ -151,7 +151,7 @@ export function Inicio() {
             <MapaEstados conteos={conteos?.estados_empresas ?? {}} alElegir={irEstado} unidad="empresas" />
             <LeyendaMapa sinEstado={conteos?.estados_empresas['Sin estado'] ?? 0} seleccionado={null} alElegir={irEstado} />
           </section>
-          <Link to="/directorio" className="boton boton-primario mt-4 h-10 w-full">
+          <Link to="/directorio" className="boton boton-primario mt-4 hidden h-10 w-full lg:flex">
             <Search size={16} /> Buscar en todo el directorio
           </Link>
         </aside>

@@ -140,7 +140,7 @@ export function Analiticas() {
   ] : []
 
   return (
-    <div className="px-4 pt-1 pb-8 md:px-6 md:pt-5">
+    <div className="px-4 pt-4 pb-8 md:px-6 md:pt-5">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-[22px] leading-7 font-semibold">Analíticas</h1>

@@ -14,7 +14,7 @@ export function Copiar({ texto, etiqueta }: { texto: string; etiqueta: string })
         setListo(true)
         setTimeout(() => setListo(false), 1500)
       }}
-      className="grid size-6 flex-none cursor-pointer place-items-center rounded text-gris-2 hover:bg-cantera hover:text-obsidiana"
+      className="grid size-9 flex-none cursor-pointer place-items-center rounded text-gris hover:bg-cantera hover:text-obsidiana md:size-6"
     >
       {listo ? <Check size={13} className="text-jade-500" /> : <Copy size={13} />}
     </button>
@@ -22,10 +22,11 @@ export function Copiar({ texto, etiqueta }: { texto: string; etiqueta: string })
 }
 
 // Ventana nativa: el navegador se encarga del foco y de cerrar con Esc.
-export function Ventana({ titulo, alCerrar, lateral, children }: {
+export function Ventana({ titulo, alCerrar, lateral, pie, children }: {
   titulo: string
   alCerrar: () => void
   lateral?: boolean
+  pie?: ReactNode
   children: ReactNode
 }) {
   const ref = useRef<HTMLDialogElement>(null)
@@ -40,25 +41,23 @@ export function Ventana({ titulo, alCerrar, lateral, children }: {
       onClose={alCerrar}
       onClick={(e) => e.target === ref.current && alCerrar()}
       aria-label={titulo}
-      className={
-        lateral
-          ? 'ml-auto h-dvh max-h-dvh w-full max-w-[480px] bg-papel text-obsidiana'
-          : 'm-auto w-[calc(100%-32px)] max-w-[480px] rounded-xl bg-papel text-obsidiana shadow-xl'
-      }
+      className={`hoja shadow-xl ${lateral ? 'hoja-alta' : ''}`}
     >
-      <div className="flex h-full flex-col">
-        <div className="flex items-start justify-between gap-4 px-6 pt-5 pb-4">
-          <h2 className="text-base leading-6 font-semibold">{titulo}</h2>
+      <div className="flex h-full max-h-[inherit] flex-col">
+        <span aria-hidden className="mx-auto mt-2 h-1 w-9 flex-none rounded-full bg-control sm:hidden" />
+        <div className="flex flex-none items-start justify-between gap-4 px-5 pt-3 pb-3 sm:px-6 sm:pt-5 sm:pb-4">
+          <h2 className="text-[17px] leading-6 font-semibold sm:text-base">{titulo}</h2>
           <button
             type="button"
             aria-label="Cerrar"
             onClick={alCerrar}
-            className="-mt-1 -mr-2 grid size-8 flex-none cursor-pointer place-items-center rounded-md hover:bg-cantera"
+            className="-mt-2 -mr-2 grid size-11 flex-none cursor-pointer place-items-center rounded-md hover:bg-cantera sm:-mt-1 sm:size-8"
           >
-            <X size={16} />
+            <X size={18} />
           </button>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-6">{children}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-6 sm:px-6">{children}</div>
+        {pie && <div className="flex-none border-t border-linea p-4">{pie}</div>}
       </div>
     </dialog>
   )
@@ -77,14 +76,15 @@ export function ErrorBloque({ mensaje, alReintentar }: { mensaje: string; alRein
   )
 }
 
-export function Pestanas<T extends string>({ opciones, valor, alCambiar, etiqueta }: {
+export function Pestanas<T extends string>({ opciones, valor, alCambiar, etiqueta, repartir }: {
   opciones: { id: T; nombre: string; cuenta?: number | string }[]
   valor: T
   alCambiar: (id: T) => void
   etiqueta: string
+  repartir?: boolean
 }) {
   return (
-    <div role="tablist" aria-label={etiqueta} className="flex gap-6 overflow-x-auto border-b border-linea">
+    <div role="tablist" aria-label={etiqueta} className="sin-barra -mx-4 flex gap-5 overflow-x-auto border-b border-linea px-4 md:mx-0 md:gap-6 md:px-0">
       {opciones.map((o) => (
         <button
           key={o.id}
@@ -92,7 +92,7 @@ export function Pestanas<T extends string>({ opciones, valor, alCambiar, etiquet
           role="tab"
           aria-selected={valor === o.id}
           onClick={() => alCambiar(o.id)}
-          className={`-mb-px flex h-10 flex-none cursor-pointer items-center gap-1.5 border-b-[3px] ${
+          className={`-mb-px flex h-11 cursor-pointer items-center gap-1.5 border-b-[3px] md:h-10 ${repartir ? 'flex-1 justify-center md:flex-none' : 'flex-none'} ${
             valor === o.id ? 'border-jade-500 font-semibold' : 'border-transparent text-gris hover:text-obsidiana'
           }`}
         >

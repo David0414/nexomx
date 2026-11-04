@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router-dom'
 import { FichaAdmin, FormEmpresa } from '../components/AdminEmpresa'
 import { ErrorBloque, Pestanas } from '../components/Comunes'
 import { LogoEmpresa } from '../components/Empresa'
-import { hostDe, n, urlDe } from '../lib/formato'
+import { hostDe, n, plural, urlDe } from '../lib/formato'
 import { ESTADOS } from '../lib/mexico'
 import { useSesion } from '../lib/sesion'
 import { GIROS, nombreGiro } from '../lib/types'
@@ -61,7 +61,7 @@ export function Empresas() {
   const hasta = Math.min((pagina + 1) * TAM, total)
 
   return (
-    <div className="px-4 pt-1 pb-8 md:px-6 md:pt-5">
+    <div className="px-4 pt-4 pb-8 md:px-6 md:pt-5">
       <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-[22px] leading-7 font-semibold">Empresas</h1>
@@ -69,10 +69,10 @@ export function Empresas() {
             {datos && `${n(datos.conteos.con_personas)} con personas de contacto y ${n(datos.conteos.sin_personas)} solo con datos generales`}
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid w-full grid-cols-2 gap-2 md:flex md:w-auto md:flex-wrap">
           <select
             aria-label="Filtrar por estado"
-            className="campo h-9 w-auto min-w-48"
+            className="campo min-w-0 md:h-9 md:w-auto md:min-w-48"
             value={estado}
             onChange={(e) => { setEstado(e.target.value); setPagina(0) }}
           >
@@ -81,14 +81,14 @@ export function Empresas() {
           </select>
           <select
             aria-label="Filtrar por giro"
-            className="campo h-9 w-auto min-w-48"
+            className="campo min-w-0 md:h-9 md:w-auto md:min-w-48"
             value={giro}
             onChange={(e) => { setGiro(e.target.value); setPagina(0) }}
           >
             <option value="">Todos los giros</option>
             {GIROS.map((g) => <option key={g.id} value={g.id}>{g.nombre}</option>)}
           </select>
-          <button type="button" className="boton boton-primario" onClick={() => setNueva(true)}>
+          <button type="button" className="boton boton-primario col-span-2" onClick={() => setNueva(true)}>
             <Plus size={16} /> Nueva empresa
           </button>
         </div>
@@ -110,7 +110,23 @@ export function Empresas() {
 
         {datos && total > 0 && (
           <>
-            <div className="overflow-x-auto">
+            <ul className="flex flex-col gap-2.5 md:hidden">
+              {datos.filas.map((e) => (
+                <li key={e.id}>
+                  <button type="button" onClick={() => setAbierta(e.id)} className="flex w-full cursor-pointer items-center gap-3 rounded-xl border border-linea p-3 text-left active:bg-tenue">
+                    <LogoEmpresa nombre={e.nombre} web={e.web} tam={44} />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-semibold">{e.nombre}</span>
+                      <span className="block truncate text-[13px] leading-[18px] text-gris">{e.estado} · {nombreGiro(e.giro)}</span>
+                      <span className="num block text-[13px] leading-[18px]">{plural(e.num_contactos, 'persona', 'personas')}{e.telefono ? '' : ' · sin teléfono'}</span>
+                    </span>
+                    <ChevronRight size={18} className="flex-none text-gris" aria-hidden />
+                  </button>
+                </li>
+              ))}
+            </ul>
+
+            <div className="hidden overflow-x-auto md:block">
               <table className="w-full min-w-[820px]">
                 <thead className="text-left text-xs text-gris">
                   <tr className="h-9">
@@ -167,10 +183,10 @@ export function Empresas() {
             <div className="mt-2 flex items-center justify-between border-t border-regla pt-3">
               <p className="num text-gris">{n(desde)}–{n(hasta)} de {n(total)}</p>
               <div className="flex gap-2">
-                <button type="button" aria-label="Página anterior" className="boton w-9 px-0" disabled={pagina === 0} onClick={() => setPagina((p) => p - 1)}>
+                <button type="button" aria-label="Página anterior" className="boton w-11 px-0 md:w-9" disabled={pagina === 0} onClick={() => setPagina((p) => p - 1)}>
                   <ChevronLeft size={16} />
                 </button>
-                <button type="button" aria-label="Página siguiente" className="boton w-9 px-0" disabled={hasta >= total} onClick={() => setPagina((p) => p + 1)}>
+                <button type="button" aria-label="Página siguiente" className="boton w-11 px-0 md:w-9" disabled={hasta >= total} onClick={() => setPagina((p) => p + 1)}>
                   <ChevronRight size={16} />
                 </button>
               </div>

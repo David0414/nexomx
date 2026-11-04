@@ -113,6 +113,52 @@ function VentanaNuevo({ alCrear, alCerrar }: {
   )
 }
 
+function CuentaPrueba({ cuenta, alCambiar, alClave }: {
+  cuenta: Cliente
+  alCambiar: () => void
+  alClave: () => void
+}) {
+  const { api } = useSesion()
+  const [limite, setLimite] = useState(String(cuenta.limite_consultas))
+  const [ocultar, setOcultar] = useState(cuenta.ocultar_contacto)
+  const [estado, setEstado] = useState('')
+
+  const guardar = async (e: FormEvent) => {
+    e.preventDefault()
+    try {
+      await api.ajustarDemo(Number(limite), ocultar)
+      setEstado('Guardado')
+      alCambiar()
+    } catch (fallo) {
+      setEstado((fallo as Error).message)
+    }
+  }
+
+  return (
+    <section aria-labelledby="titulo-prueba" className="mb-5 rounded-xl border border-linea p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h2 id="titulo-prueba" className="font-semibold">Cuenta de prueba</h2>
+          <p className="truncate text-gris">{cuenta.correo}</p>
+        </div>
+        <button type="button" className="boton" onClick={alClave}>Nueva contraseña</button>
+      </div>
+      <form onSubmit={guardar} className="mt-4 flex flex-wrap items-end gap-x-6 gap-y-3">
+        <div className="w-44">
+          <label className="etiqueta" htmlFor="demo-limite">Consultas por ingreso</label>
+          <input id="demo-limite" type="number" min={0} max={1000} required className="campo num" value={limite} onChange={(e) => setLimite(e.target.value)} />
+        </div>
+        <label className="flex min-h-11 cursor-pointer items-center gap-2.5">
+          <input type="checkbox" className="size-5 accent-[var(--color-jade-500)]" checked={ocultar} onChange={(e) => setOcultar(e.target.checked)} />
+          Ocultar parte de correos y teléfonos
+        </label>
+        <button type="submit" className="boton boton-primario">Guardar</button>
+        {estado && <p role="status" className="text-gris">{estado}</p>}
+      </form>
+    </section>
+  )
+}
+
 function MenuFila({ cliente, alRenovar, alClave, alSuspender }: {
   cliente: Cliente
   alRenovar: () => void
@@ -131,7 +177,7 @@ function MenuFila({ cliente, alRenovar, alClave, alSuspender }: {
     return () => document.removeEventListener('mousedown', cerrar)
   }, [abierto])
 
-  const opcion = 'block w-full cursor-pointer rounded px-2.5 py-1.5 text-left hover:bg-cantera'
+  const opcion = 'block w-full cursor-pointer rounded px-2.5 py-2.5 text-left hover:bg-cantera md:py-1.5'
   const elegir = (accion: () => void) => () => {
     setAbierto(false)
     accion()
@@ -144,12 +190,12 @@ function MenuFila({ cliente, alRenovar, alClave, alSuspender }: {
         aria-label={`Acciones de ${cliente.nombre}`}
         aria-expanded={abierto}
         onClick={() => setAbierto(!abierto)}
-        className="grid size-8 cursor-pointer place-items-center rounded-md hover:bg-cantera"
+        className="grid size-11 cursor-pointer place-items-center rounded-md hover:bg-cantera md:size-8"
       >
-        <MoreHorizontal size={16} />
+        <MoreHorizontal size={18} />
       </button>
       {abierto && (
-        <div className="absolute top-9 right-0 z-10 w-48 rounded-lg border border-linea bg-papel p-1 text-left shadow-lg">
+        <div className="absolute top-11 right-0 z-10 w-52 md:top-9 rounded-lg border border-linea bg-papel p-1 text-left shadow-lg">
           <button type="button" className={opcion} onClick={elegir(alRenovar)}>Renovar 30 días</button>
           <button type="button" className={opcion} onClick={elegir(alClave)}>Nueva contraseña</button>
           <button type="button" className={`${opcion} ${cliente.activo ? 'text-alerta' : ''}`} onClick={elegir(alSuspender)}>
@@ -179,11 +225,13 @@ export function Clientes() {
 
   const cuentas = useMemo(() => {
     const salida: Record<EstadoCliente, number> = { activo: 0, por_vencer: 0, vencido: 0, suspendido: 0 }
-    for (const c of clientes ?? []) salida[estadoCliente(c)]++
+    for (const c of clientes ?? []) if (!c.demo) salida[estadoCliente(c)]++
     return salida
   }, [clientes])
 
-  const visibles = (clientes ?? []).filter((c) => tab === 'todos' || estadoCliente(c) === tab)
+  const prueba = clientes?.find((c) => c.demo)
+  const reales = clientes?.filter((c) => !c.demo)
+  const visibles = (reales ?? []).filter((c) => tab === 'todos' || estadoCliente(c) === tab)
 
   const accion = async (tarea: () => Promise<void>) => {
     try {
@@ -204,7 +252,7 @@ export function Clientes() {
     : `${plural(cuentas.activo, 'cliente activo', 'clientes activos')}`
 
   return (
-    <div className="px-4 pt-1 pb-8 md:px-6 md:pt-5">
+    <div className="px-4 pt-4 pb-8 md:px-6 md:pt-5">
       <div className="mb-3 flex items-start justify-between gap-4">
         <div>
           <h1 className="text-[22px] leading-7 font-semibold">Clientes</h1>
@@ -215,12 +263,22 @@ export function Clientes() {
         </button>
       </div>
 
+      {prueba && (
+        <CuentaPrueba
+          cuenta={prueba}
+          alCambiar={cargar}
+          alClave={() => accion(async () => {
+            setCredencial({ dato: await api.nuevaClave(prueba.id), titulo: 'Nueva contraseña de prueba' })
+          })}
+        />
+      )}
+
       <Pestanas
         etiqueta="Estado del acceso"
         valor={tab}
         alCambiar={setTab}
         opciones={[
-          { id: 'todos', nombre: 'Todos', cuenta: clientes?.length },
+          { id: 'todos', nombre: 'Todos', cuenta: reales?.length },
           { id: 'activo', nombre: 'Activos', cuenta: cuentas.activo },
           { id: 'por_vencer', nombre: 'Por vencer', cuenta: cuentas.por_vencer },
           { id: 'vencido', nombre: 'Vencidos', cuenta: cuentas.vencido },
@@ -233,7 +291,7 @@ export function Clientes() {
 
         {clientes && visibles.length === 0 && !error && (
           <div className="rounded-lg border border-dashed border-control px-4 py-3">
-            {clientes.length === 0 ? (
+            {reales?.length === 0 ? (
               <>
                 <p>Aún no tienes clientes.</p>
                 <button type="button" className="mt-1 cursor-pointer font-medium underline underline-offset-2" onClick={() => setNuevo(true)}>
@@ -284,7 +342,7 @@ export function Clientes() {
                     <td className="inline pr-4 text-xs text-gris-2 md:table-cell md:text-right md:text-sm">
                       <span className="md:hidden">· </span>{haceCuanto(c.ultimo_acceso) ?? '—'}
                     </td>
-                    <td className="absolute top-2 right-0 md:static md:w-[132px]">
+                    <td className="absolute top-1 right-0 md:static md:w-[132px]">
                       <div className="flex items-center justify-end gap-1">
                       {c.activo && (estado === 'por_vencer' || estado === 'vencido') && (
                         <button type="button" className="boton h-8 px-2.5" onClick={() => renovar(c)}>Renovar</button>
