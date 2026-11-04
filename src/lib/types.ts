@@ -51,8 +51,8 @@ export interface Perfil {
   vence_el: string | null
   limite_diario: number
   demo: boolean
-  ocultar_contacto: boolean
-  limite_consultas: number
+  demo_minutos: number
+  demo_empresas: number
 }
 
 export interface Filtros {
@@ -77,6 +77,7 @@ export interface ContactoFila {
   telefono: string | null
   telefono_directo: boolean
   web: string | null
+  bloqueada?: boolean
 }
 
 export interface EmpresaFila {
@@ -88,6 +89,7 @@ export interface EmpresaFila {
   telefono: string | null
   web: string | null
   num_contactos: number
+  bloqueada?: boolean
 }
 
 export interface EmpresaResumen {
@@ -98,6 +100,7 @@ export interface EmpresaResumen {
   web: string | null
   num_contactos: number
   telefono?: string | null
+  bloqueada?: boolean
 }
 
 export interface Pagina<T> {
@@ -115,6 +118,7 @@ export interface Conteos {
 }
 
 export interface DetalleEmpresa {
+  bloqueada?: boolean
   empresa: Omit<EmpresaFila, 'num_contactos'>
   contactos: {
     id: number
@@ -138,8 +142,24 @@ export interface Cliente {
   creado_el: string
   uso_hoy: number
   demo: boolean
-  ocultar_contacto: boolean
-  limite_consultas: number
+  demo_minutos: number
+  demo_empresas: number
+  demo_inicio: string | null
+  demo_usadas: number
+  demo_restante: number | null
+}
+
+export interface NuevaDemo {
+  nombre: string
+  correo: string
+  minutos: number
+  empresas: number
+}
+
+export interface EstadoDemo {
+  restante: number
+  usadas: number
+  limite: number
 }
 
 export interface NuevoCliente {
@@ -232,8 +252,10 @@ export interface Api {
   conteos(filtros: Filtros): Promise<Conteos>
   detalle(id: number): Promise<DetalleEmpresa>
   usoHoy(): Promise<number>
-  demoEstado(): Promise<{ usadas: number; limite: number }>
-  ajustarDemo(limite: number, ocultar: boolean): Promise<void>
+  demoEstado(): Promise<EstadoDemo>
+  demoDesbloquear(id: number): Promise<void>
+  crearDemo(datos: NuevaDemo): Promise<Credencial>
+  reiniciarDemo(id: string): Promise<void>
   favoritos(): Promise<EmpresaFila[]>
   alternarFavorito(id: number): Promise<boolean>
   destacadas(): Promise<EmpresaResumen[]>

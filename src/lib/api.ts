@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import type { Api, Filtros, Perfil } from './types'
+import type { Api, Credencial, Filtros, Perfil } from './types'
 
 export const TAM_PAGINA = 25
 
@@ -14,8 +14,8 @@ const MENSAJES: Record<string, string> = {
   sin_perfil: 'Esta cuenta no tiene acceso a NexoMx.',
   empresa_no_encontrada: 'Esa empresa ya no está en el directorio.',
   limite_favoritos: 'Llegaste a 200 favoritos. Quita alguno para guardar otro.',
-  demo_agotada: 'Terminaste tus consultas de prueba. Escríbele a tu asesor de NexoMx para activar tu cuenta.',
-  demo_pagina: 'La cuenta de prueba muestra solo los primeros resultados.',
+  demo_terminada: 'Tu demo terminó. Escríbele a tu asesor de NexoMx para activar tu cuenta.',
+  demo_sin_empresas: 'Ya usaste todas las empresas de tu demo.',
   demo_favoritos: 'Los favoritos se activan con tu cuenta.',
   nombre_requerido: 'Escribe el nombre de la empresa.',
   contacto_incompleto: 'Escribe al menos el nombre o el correo de la persona.',
@@ -55,7 +55,7 @@ function crearApiSupabase(url: string, anon: string): Api {
   const perfilDe = async (id: string) => {
     const { data } = await supabase
       .from('perfiles')
-      .select('id, nombre, empresa, correo, rol, activo, vence_el, limite_diario, demo, ocultar_contacto, limite_consultas')
+      .select('id, nombre, empresa, correo, rol, activo, vence_el, limite_diario, demo, demo_minutos, demo_empresas')
       .eq('id', id)
       .maybeSingle()
     return data as Perfil | null
@@ -89,7 +89,17 @@ function crearApiSupabase(url: string, anon: string): Api {
     detalle: (id) => rpc('detalle_empresa', { p_id: id }),
     usoHoy: () => rpc('uso_hoy'),
     demoEstado: () => rpc('demo_estado'),
-    ajustarDemo: (limite, ocultar) => rpc('admin_demo', { p_limite: limite, p_ocultar: ocultar }),
+    demoDesbloquear: async (id) => {
+      await rpc('demo_desbloquear', { p_empresa_id: id })
+    },
+    crearDemo: async ({ nombre, correo, minutos, empresas }) => {
+      const credencial = await admin<Credencial>({ accion: 'crear', nombre, correo, empresa: '', vence_el: null, limite_diario: 1000 })
+      await rpc('admin_marcar_demo', { p_id: credencial.id, p_minutos: minutos, p_empresas: empresas })
+      return credencial
+    },
+    reiniciarDemo: async (id) => {
+      await rpc('admin_reiniciar_demo', { p_id: id })
+    },
     favoritos: () => rpc('mis_favoritos'),
     alternarFavorito: (id) => rpc('alternar_favorito', { p_empresa_id: id }),
     destacadas: () => rpc('empresas_destacadas'),

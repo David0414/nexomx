@@ -254,6 +254,13 @@ html {
     background: var(--color-jade-700);
   }
 
+  /* El texto es de relleno: el servidor nunca manda el dato real de una empresa bloqueada. */
+  .borroso {
+    filter: blur(5px);
+    user-select: none;
+    pointer-events: none;
+  }
+
   .accion {
     display: inline-flex;
     flex: 1;

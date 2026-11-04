@@ -108,14 +108,16 @@ const contar = <T,>(filas: T[], clave: (fila: T) => string) => {
 const hace = (minutos: number) => new Date(Date.now() - minutos * 60000).toISOString()
 
 const clientes: Cliente[] = [
-  { id: 'd1', nombre: 'Regina Quiroz', empresa: 'Lubricantes Cerro Azul', correo: 'regina@lubricantescerroazul.example', activo: true, vence_el: sumarDias(hoy(), 142), limite_diario: 1000, ultimo_acceso: hace(12), creado_el: hace(90000), uso_hoy: 860, demo: false, ocultar_contacto: false, limite_consultas: 10 },
-  { id: 'd2', nombre: 'Mauricio Elizondo', empresa: 'Rodamientos Norteños', correo: 'mauricio@rodamientosnortenos.example', activo: true, vence_el: sumarDias(hoy(), 6), limite_diario: 1000, ultimo_acceso: hace(190), creado_el: hace(80000), uso_hoy: 225, demo: false, ocultar_contacto: false, limite_consultas: 10 },
-  { id: 'd3', nombre: 'Sofía Bretón', empresa: 'Empaques Industriales del Centro', correo: 'sofia@empaquescentro.example', activo: true, vence_el: sumarDias(hoy(), 12), limite_diario: 500, ultimo_acceso: hace(2900), creado_el: hace(70000), uso_hoy: 0, demo: false, ocultar_contacto: false, limite_consultas: 10 },
-  { id: 'd4', nombre: 'Ernesto Palacios', empresa: 'Seguridad Industrial Palacios', correo: 'ernesto@segpalacios.example', activo: true, vence_el: sumarDias(hoy(), -3), limite_diario: 1000, ultimo_acceso: hace(7000), creado_el: hace(120000), uso_hoy: 0, demo: false, ocultar_contacto: false, limite_consultas: 10 },
-  { id: 'd5', nombre: 'Lorena Treviño', empresa: 'Consultoría LT', correo: 'lorena@consultorialt.example', activo: true, vence_el: sumarDias(hoy(), 58), limite_diario: 1000, ultimo_acceso: hace(45), creado_el: hace(30000), uso_hoy: 350, demo: false, ocultar_contacto: false, limite_consultas: 10 },
-  { id: 'd6', nombre: 'Andrés Beltrán', empresa: 'Beltrán Herramientas', correo: 'andres@beltranherramientas.example', activo: false, vence_el: sumarDias(hoy(), 40), limite_diario: 1000, ultimo_acceso: hace(30000), creado_el: hace(100000), uso_hoy: 0, demo: false, ocultar_contacto: false, limite_consultas: 10 },
-  { id: 'd7', nombre: 'Patricia Guerra', empresa: null, correo: 'patricia.guerra@correo.example', activo: true, vence_el: null, limite_diario: 2000, ultimo_acceso: null, creado_el: hace(600), uso_hoy: 0, demo: false, ocultar_contacto: false, limite_consultas: 10 },
-  { id: 'd8', nombre: 'Cuenta de prueba', empresa: null, correo: 'demo@nexomx.mx', activo: true, vence_el: null, limite_diario: 1000, ultimo_acceso: hace(30), creado_el: hace(900), uso_hoy: 0, demo: true, ocultar_contacto: true, limite_consultas: 10 },
+  { id: 'd1', nombre: 'Regina Quiroz', empresa: 'Lubricantes Cerro Azul', correo: 'regina@lubricantescerroazul.example', activo: true, vence_el: sumarDias(hoy(), 142), limite_diario: 1000, ultimo_acceso: hace(12), creado_el: hace(90000), uso_hoy: 860, demo: false, demo_minutos: 15, demo_empresas: 10, demo_inicio: null, demo_usadas: 0, demo_restante: null },
+  { id: 'd2', nombre: 'Mauricio Elizondo', empresa: 'Rodamientos Norteños', correo: 'mauricio@rodamientosnortenos.example', activo: true, vence_el: sumarDias(hoy(), 6), limite_diario: 1000, ultimo_acceso: hace(190), creado_el: hace(80000), uso_hoy: 225, demo: false, demo_minutos: 15, demo_empresas: 10, demo_inicio: null, demo_usadas: 0, demo_restante: null },
+  { id: 'd3', nombre: 'Sofía Bretón', empresa: 'Empaques Industriales del Centro', correo: 'sofia@empaquescentro.example', activo: true, vence_el: sumarDias(hoy(), 12), limite_diario: 500, ultimo_acceso: hace(2900), creado_el: hace(70000), uso_hoy: 0, demo: false, demo_minutos: 15, demo_empresas: 10, demo_inicio: null, demo_usadas: 0, demo_restante: null },
+  { id: 'd4', nombre: 'Ernesto Palacios', empresa: 'Seguridad Industrial Palacios', correo: 'ernesto@segpalacios.example', activo: true, vence_el: sumarDias(hoy(), -3), limite_diario: 1000, ultimo_acceso: hace(7000), creado_el: hace(120000), uso_hoy: 0, demo: false, demo_minutos: 15, demo_empresas: 10, demo_inicio: null, demo_usadas: 0, demo_restante: null },
+  { id: 'd5', nombre: 'Lorena Treviño', empresa: 'Consultoría LT', correo: 'lorena@consultorialt.example', activo: true, vence_el: sumarDias(hoy(), 58), limite_diario: 1000, ultimo_acceso: hace(45), creado_el: hace(30000), uso_hoy: 350, demo: false, demo_minutos: 15, demo_empresas: 10, demo_inicio: null, demo_usadas: 0, demo_restante: null },
+  { id: 'd6', nombre: 'Andrés Beltrán', empresa: 'Beltrán Herramientas', correo: 'andres@beltranherramientas.example', activo: false, vence_el: sumarDias(hoy(), 40), limite_diario: 1000, ultimo_acceso: hace(30000), creado_el: hace(100000), uso_hoy: 0, demo: false, demo_minutos: 15, demo_empresas: 10, demo_inicio: null, demo_usadas: 0, demo_restante: null },
+  { id: 'd7', nombre: 'Patricia Guerra', empresa: null, correo: 'patricia.guerra@correo.example', activo: true, vence_el: null, limite_diario: 2000, ultimo_acceso: null, creado_el: hace(600), uso_hoy: 0, demo: false, demo_minutos: 15, demo_empresas: 10, demo_inicio: null, demo_usadas: 0, demo_restante: null },
+  { id: 'd8', nombre: 'Gabriela Montes', empresa: null, correo: 'gabriela@bandasnorte.example', activo: true, vence_el: null, limite_diario: 1000, ultimo_acceso: hace(3), creado_el: hace(900), uso_hoy: 0, demo: true, demo_minutos: 15, demo_empresas: 10, demo_inicio: hace(6), demo_usadas: 4, demo_restante: 540 },
+  { id: 'd9', nombre: 'Rubén Ochoa', empresa: null, correo: 'ruben@ochoamaquinados.example', activo: true, vence_el: null, limite_diario: 1000, ultimo_acceso: null, creado_el: hace(120), uso_hoy: 0, demo: true, demo_minutos: 15, demo_empresas: 10, demo_inicio: null, demo_usadas: 0, demo_restante: null },
+  { id: 'd10', nombre: 'Claudia Sáenz', empresa: null, correo: 'claudia@saenzempaques.example', activo: true, vence_el: null, limite_diario: 1000, ultimo_acceso: hace(4000), creado_el: hace(5000), uso_hoy: 0, demo: true, demo_minutos: 15, demo_empresas: 10, demo_inicio: hace(4000), demo_usadas: 10, demo_restante: 0 },
 ]
 
 const actividad: Actividad[] = [
@@ -139,15 +141,9 @@ const favoritos = new Set(empresas.filter((e) => e.num_contactos > 1).slice(3, 7
 
 const claveDemo = () => 'k7Hn2vQpX4mRtz'
 
-const consultasDemo = new Set<string>()
-const limiteDemo = () => clientes.find((c) => c.demo)?.limite_consultas ?? 10
-
-function gastar(f: Filtros) {
-  if (!perfil?.demo || !(f.q || f.estado || f.area || f.giro)) return
-  const clave = JSON.stringify(f)
-  if (!consultasDemo.has(clave) && consultasDemo.size >= limiteDemo()) throw new ErrorApp('demo_agotada')
-  consultasDemo.add(clave)
-}
+const desbloqueadas = new Set<number>()
+const inicioDemo = Date.now()
+const bloqueada = (id: number) => Boolean(perfil?.demo) && !desbloqueadas.has(id)
 
 export const apiDemo: Api = {
   async sesion() {
@@ -157,11 +153,11 @@ export const apiDemo: Api = {
     return perfil
   },
   async entrar(correo) {
-    const base = { activo: true, demo: false, ocultar_contacto: false, limite_consultas: 10 }
+    const base = { activo: true, demo: false, demo_minutos: 15, demo_empresas: 10, demo_inicio: null, demo_usadas: 0, demo_restante: null }
     perfil = correo.includes('admin')
       ? { ...base, id: 'adm', nombre: 'David Mendoza', empresa: 'NexoMx', correo, rol: 'admin', vence_el: null, limite_diario: 0 }
       : correo === 'prueba'
-        ? { ...base, id: 'd8', nombre: 'Invitado', empresa: null, correo: 'demo@nexomx.mx', rol: 'cliente', vence_el: null, limite_diario: 1000, demo: true, ocultar_contacto: true }
+        ? { ...base, id: 'd8', nombre: 'Invitado', empresa: null, correo: 'demo@nexomx.mx', rol: 'cliente', vence_el: null, limite_diario: 1000, demo: true }
         : { ...base, id: 'd1', nombre: 'Regina Quiroz', empresa: 'Lubricantes Cerro Azul', correo, rol: 'cliente', vence_el: sumarDias(hoy(), 142), limite_diario: 1000 }
     return perfil
   },
@@ -170,22 +166,23 @@ export const apiDemo: Api = {
   },
   async cambiarClave() {},
   async contactos(f, pagina) {
-    gastar(f)
     const base = contactosBase(f).filter((c) => (!f.estado || c.estado === f.estado) && (!f.area || c.area === f.area))
     const filas = base.slice(pagina * TAM_PAGINA, (pagina + 1) * TAM_PAGINA)
-    if (!perfil?.ocultar_contacto) return { total: base.length, filas }
     return {
       total: base.length,
-      filas: filas.map((c) => ({
-        ...c,
-        correo: c.correo && `${c.correo.slice(0, 2)}***@${c.correo.split('@')[1]}`,
-        telefono: c.telefono && `${c.telefono.slice(0, 3)} *** ****`,
-      })),
+      filas: filas.map((c) => (bloqueada(c.empresa_id)
+        ? { ...c, bloqueada: true, nombre: 'Nombre del contacto', puesto: 'Puesto del contacto', correo: 'contacto@empresa.com', telefono: '+52 000 000 0000', telefono_directo: false }
+        : c)),
     }
   },
   async empresas(f, pagina) {
     const base = empresasBase(f).filter((e) => (!f.estado || e.estado === f.estado) && (!f.giro || e.giro === f.giro))
-    return { total: base.length, filas: base.slice(pagina * TAM_PAGINA, (pagina + 1) * TAM_PAGINA) }
+    return {
+      total: base.length,
+      filas: base.slice(pagina * TAM_PAGINA, (pagina + 1) * TAM_PAGINA).map((e) => (bloqueada(e.id)
+        ? { ...e, bloqueada: true, telefono: '+52 000 000 0000' }
+        : e)),
+    }
   },
   async conteos(f) {
     const c = contactosBase(f)
@@ -205,22 +202,36 @@ export const apiDemo: Api = {
   async detalle(id) {
     const empresa = empresas.find((e) => e.id === id)
     if (!empresa) throw new ErrorApp('empresa_no_encontrada')
+    const oculta = bloqueada(id)
     return {
-      empresa,
-      contactos: contactos.filter((c) => c.empresa_id === id).map((c) => ({
-        id: c.id, nombre: c.nombre, puesto: c.puesto, area: c.area, correo: c.correo,
-        telefono_directo: c.telefono_directo ? c.telefono : null,
-      })),
+      bloqueada: oculta,
+      empresa: oculta ? { ...empresa, telefono: '+52 000 000 0000' } : empresa,
+      contactos: contactos.filter((c) => c.empresa_id === id).map((c) => (oculta
+        ? { id: c.id, nombre: 'Nombre del contacto', puesto: 'Puesto del contacto', area: c.area, correo: 'contacto@empresa.com', telefono_directo: null }
+        : { id: c.id, nombre: c.nombre, puesto: c.puesto, area: c.area, correo: c.correo, telefono_directo: c.telefono_directo ? c.telefono : null })),
     }
   },
   async usoHoy() {
     return 860
   },
   async demoEstado() {
-    return { usadas: consultasDemo.size, limite: limiteDemo() }
+    return { restante: Math.max(900 - Math.round((Date.now() - inicioDemo) / 1000), 0), usadas: desbloqueadas.size, limite: 10 }
   },
-  async ajustarDemo(limite, ocultar) {
-    Object.assign(clientes.find((c) => c.demo)!, { limite_consultas: limite, ocultar_contacto: ocultar })
+  async demoDesbloquear(id) {
+    if (desbloqueadas.size >= 10 && !desbloqueadas.has(id)) throw new ErrorApp('demo_sin_empresas')
+    desbloqueadas.add(id)
+  },
+  async crearDemo(datos) {
+    const id = `d${clientes.length + 1}`
+    clientes.unshift({
+      id, nombre: datos.nombre, empresa: null, correo: datos.correo, activo: true, vence_el: null, limite_diario: 1000,
+      ultimo_acceso: null, creado_el: new Date().toISOString(), uso_hoy: 0, demo: true, demo_minutos: datos.minutos,
+      demo_empresas: datos.empresas, demo_inicio: null, demo_usadas: 0, demo_restante: null,
+    })
+    return { id, correo: datos.correo, clave: claveDemo() }
+  },
+  async reiniciarDemo(id) {
+    Object.assign(clientes.find((c) => c.id === id)!, { demo_inicio: null, demo_usadas: 0, demo_restante: null })
   },
   async favoritos() {
     return [...favoritos].flatMap((id) => empresas.filter((e) => e.id === id))
@@ -350,7 +361,7 @@ export const apiDemo: Api = {
   async crearCliente(datos) {
     if (clientes.some((c) => c.correo === datos.correo)) throw new ErrorApp('correo_duplicado')
     const id = `d${clientes.length + 1}`
-    clientes.unshift({ ...datos, id, empresa: datos.empresa || null, activo: true, ultimo_acceso: null, creado_el: new Date().toISOString(), uso_hoy: 0, demo: false, ocultar_contacto: false, limite_consultas: 10 })
+    clientes.unshift({ ...datos, id, empresa: datos.empresa || null, activo: true, ultimo_acceso: null, creado_el: new Date().toISOString(), uso_hoy: 0, demo: false, demo_minutos: 15, demo_empresas: 10, demo_inicio: null, demo_usadas: 0, demo_restante: null })
     return { id, correo: datos.correo, clave: claveDemo() }
   },
   async nuevaClave(id) {

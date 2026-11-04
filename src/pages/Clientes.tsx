@@ -7,7 +7,7 @@ import {
 import { useSesion } from '../lib/sesion'
 import type { Cliente, Credencial } from '../lib/types'
 
-type Tab = 'todos' | EstadoCliente
+type Tab = 'todos' | 'demos' | EstadoCliente
 
 const PASTILLA: Partial<Record<EstadoCliente, [string, string]>> = {
   por_vencer: ['bg-aviso-bg text-aviso-tinta', 'Por vencer'],
@@ -113,49 +113,83 @@ function VentanaNuevo({ alCrear, alCerrar }: {
   )
 }
 
-function CuentaPrueba({ cuenta, alCambiar, alClave }: {
-  cuenta: Cliente
-  alCambiar: () => void
-  alClave: () => void
-}) {
+function VentanaDemo({ alCrear, alCerrar }: { alCrear: (credencial: Credencial) => void; alCerrar: () => void }) {
   const { api } = useSesion()
-  const [limite, setLimite] = useState(String(cuenta.limite_consultas))
-  const [ocultar, setOcultar] = useState(cuenta.ocultar_contacto)
-  const [estado, setEstado] = useState('')
+  const [nombre, setNombre] = useState('')
+  const [correo, setCorreo] = useState('')
+  const [minutos, setMinutos] = useState('15')
+  const [empresas, setEmpresas] = useState('10')
+  const [error, setError] = useState('')
+  const [enviando, setEnviando] = useState(false)
 
-  const guardar = async (e: FormEvent) => {
+  const enviar = async (e: FormEvent) => {
     e.preventDefault()
+    setEnviando(true)
+    setError('')
     try {
-      await api.ajustarDemo(Number(limite), ocultar)
-      setEstado('Guardado')
-      alCambiar()
+      alCrear(await api.crearDemo({
+        nombre: nombre.trim(), correo: correo.trim().toLowerCase(), minutos: Number(minutos), empresas: Number(empresas),
+      }))
     } catch (fallo) {
-      setEstado((fallo as Error).message)
+      setError((fallo as Error).message)
+      setEnviando(false)
     }
   }
 
   return (
-    <section aria-labelledby="titulo-prueba" className="mb-5 rounded-xl border border-linea p-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h2 id="titulo-prueba" className="font-semibold">Cuenta de prueba</h2>
-          <p className="truncate text-gris">{cuenta.correo}</p>
+    <Ventana titulo="Nueva demo" alCerrar={alCerrar}>
+      <form onSubmit={enviar} className="flex flex-col gap-4">
+        <div>
+          <label className="etiqueta" htmlFor="d-nombre">Nombre</label>
+          <input id="d-nombre" required className="campo" value={nombre} onChange={(e) => setNombre(e.target.value)} />
         </div>
-        <button type="button" className="boton" onClick={alClave}>Nueva contraseña</button>
-      </div>
-      <form onSubmit={guardar} className="mt-4 flex flex-wrap items-end gap-x-6 gap-y-3">
-        <div className="w-44">
-          <label className="etiqueta" htmlFor="demo-limite">Consultas por ingreso</label>
-          <input id="demo-limite" type="number" min={0} max={1000} required className="campo num" value={limite} onChange={(e) => setLimite(e.target.value)} />
+        <div>
+          <label className="etiqueta" htmlFor="d-correo">Correo</label>
+          <input id="d-correo" type="email" required className="campo" value={correo} onChange={(e) => setCorreo(e.target.value)} />
         </div>
-        <label className="flex min-h-11 cursor-pointer items-center gap-2.5">
-          <input type="checkbox" className="size-5 accent-[var(--color-jade-500)]" checked={ocultar} onChange={(e) => setOcultar(e.target.checked)} />
-          Ocultar parte de correos y teléfonos
-        </label>
-        <button type="submit" className="boton boton-primario">Guardar</button>
-        {estado && <p role="status" className="text-gris">{estado}</p>}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="etiqueta" htmlFor="d-minutos">Minutos</label>
+            <input id="d-minutos" type="number" min={1} max={1440} required className="campo num" value={minutos} onChange={(e) => setMinutos(e.target.value)} />
+          </div>
+          <div>
+            <label className="etiqueta" htmlFor="d-empresas">Empresas</label>
+            <input id="d-empresas" type="number" min={0} max={500} required className="campo num" value={empresas} onChange={(e) => setEmpresas(e.target.value)} />
+          </div>
+        </div>
+        <p className="text-gris">El tiempo empieza cuando la persona entra por primera vez.</p>
+        {error && <p role="alert" className="rounded-md bg-alerta-bg px-3 py-2 text-alerta-tinta">{error}</p>}
+        <button type="submit" disabled={enviando} className="boton boton-primario">
+          {enviando ? 'Creando…' : 'Crear demo y generar contraseña'}
+        </button>
       </form>
-    </section>
+    </Ventana>
+  )
+}
+
+function FilaDemo({ demo, alReiniciar, alClave }: { demo: Cliente; alReiniciar: () => void; alClave: () => void }) {
+  const terminada = demo.demo_restante === 0
+  const [tono, texto] = demo.demo_inicio === null
+    ? ['bg-cantera text-gris', 'Sin usar']
+    : terminada
+      ? ['bg-alerta-bg text-alerta-tinta', 'Terminada']
+      : ['bg-jade-50 text-jade-700', `Quedan ${Math.ceil((demo.demo_restante ?? 0) / 60)} min`]
+
+  return (
+    <li className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-regla py-3">
+      <div className="min-w-0 flex-1 basis-56">
+        <p className="flex items-center gap-2">
+          <span className="truncate font-medium">{demo.nombre}</span>
+          <span className={`pastilla ${tono}`}>{texto}</span>
+        </p>
+        <p className="truncate text-xs text-gris">{demo.correo}</p>
+      </div>
+      <p className="num text-gris">{n(demo.demo_usadas)} /{n(demo.demo_empresas)} empresas · {n(demo.demo_minutos)} min</p>
+      <div className="flex gap-2">
+        <button type="button" className="boton h-9 px-3" onClick={alClave}>Nueva contraseña</button>
+        <button type="button" className="boton h-9 px-3" onClick={alReiniciar}>Reiniciar</button>
+      </div>
+    </li>
   )
 }
 
@@ -213,6 +247,7 @@ export function Clientes() {
   const [error, setError] = useState('')
   const [tab, setTab] = useState<Tab>('todos')
   const [nuevo, setNuevo] = useState(false)
+  const [nuevaDemo, setNuevaDemo] = useState(false)
   const [credencial, setCredencial] = useState<{ dato: Credencial; titulo: string } | null>(null)
   const [aSuspender, setASuspender] = useState<Cliente | null>(null)
 
@@ -229,7 +264,7 @@ export function Clientes() {
     return salida
   }, [clientes])
 
-  const prueba = clientes?.find((c) => c.demo)
+  const demos = clientes?.filter((c) => c.demo) ?? []
   const reales = clientes?.filter((c) => !c.demo)
   const visibles = (reales ?? []).filter((c) => tab === 'todos' || estadoCliente(c) === tab)
 
@@ -258,20 +293,16 @@ export function Clientes() {
           <h1 className="text-[22px] leading-7 font-semibold">Clientes</h1>
           <p className="mt-0.5 min-h-5 text-gris">{clientes && hallazgo}</p>
         </div>
-        <button type="button" className="boton boton-primario" onClick={() => setNuevo(true)}>
-          <Plus size={16} /> Nuevo cliente
-        </button>
+        {tab === 'demos' ? (
+          <button type="button" className="boton boton-primario" onClick={() => setNuevaDemo(true)}>
+            <Plus size={16} /> Nueva demo
+          </button>
+        ) : (
+          <button type="button" className="boton boton-primario" onClick={() => setNuevo(true)}>
+            <Plus size={16} /> Nuevo cliente
+          </button>
+        )}
       </div>
-
-      {prueba && (
-        <CuentaPrueba
-          cuenta={prueba}
-          alCambiar={cargar}
-          alClave={() => accion(async () => {
-            setCredencial({ dato: await api.nuevaClave(prueba.id), titulo: 'Nueva contraseña de prueba' })
-          })}
-        />
-      )}
 
       <Pestanas
         etiqueta="Estado del acceso"
@@ -283,13 +314,33 @@ export function Clientes() {
           { id: 'por_vencer', nombre: 'Por vencer', cuenta: cuentas.por_vencer },
           { id: 'vencido', nombre: 'Vencidos', cuenta: cuentas.vencido },
           { id: 'suspendido', nombre: 'Suspendidos', cuenta: cuentas.suspendido },
+          { id: 'demos', nombre: 'Demos', cuenta: demos.length },
         ]}
       />
 
       <div className="mt-3">
         {error && <div className="mb-3"><ErrorBloque mensaje={error} alReintentar={cargar} /></div>}
 
-        {clientes && visibles.length === 0 && !error && (
+        {tab === 'demos' && (
+          demos.length === 0
+            ? <p className="rounded-lg border border-dashed border-control px-4 py-3">Aún no has creado demos.</p>
+            : (
+              <ul>
+                {demos.map((d) => (
+                  <FilaDemo
+                    key={d.id}
+                    demo={d}
+                    alReiniciar={() => accion(() => api.reiniciarDemo(d.id))}
+                    alClave={() => accion(async () => {
+                      setCredencial({ dato: await api.nuevaClave(d.id), titulo: `Nueva contraseña de ${d.nombre}` })
+                    })}
+                  />
+                ))}
+              </ul>
+            )
+        )}
+
+        {tab !== 'demos' && clientes && visibles.length === 0 && !error && (
           <div className="rounded-lg border border-dashed border-control px-4 py-3">
             {reales?.length === 0 ? (
               <>
@@ -302,7 +353,7 @@ export function Clientes() {
           </div>
         )}
 
-        {visibles.length > 0 && (
+        {tab !== 'demos' && visibles.length > 0 && (
           <table className="block w-full md:table">
             <thead className="hidden text-left text-xs text-gris-2 md:table-header-group">
               <tr className="h-9">
@@ -371,6 +422,17 @@ export function Clientes() {
           alCrear={(dato) => {
             setNuevo(false)
             setCredencial({ dato, titulo: 'Cuenta creada' })
+            cargar()
+          }}
+        />
+      )}
+
+      {nuevaDemo && (
+        <VentanaDemo
+          alCerrar={() => setNuevaDemo(false)}
+          alCrear={(dato) => {
+            setNuevaDemo(false)
+            setCredencial({ dato, titulo: 'Demo creada' })
             cargar()
           }}
         />

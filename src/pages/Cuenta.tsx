@@ -2,12 +2,13 @@ import { LogOut } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
 import { fecha, n, textoVencimiento } from '../lib/formato'
 import { usePerfil, useSesion } from '../lib/sesion'
+import type { EstadoDemo } from '../lib/types'
 
 export function Cuenta() {
   const { api, salir } = useSesion()
   const perfil = usePerfil()
   const [uso, setUso] = useState<number | null>(null)
-  const [prueba, setPrueba] = useState<{ usadas: number; limite: number } | null>(null)
+  const [prueba, setPrueba] = useState<EstadoDemo | null>(null)
   const [clave, setClave] = useState('')
   const [repetida, setRepetida] = useState('')
   const [mensaje, setMensaje] = useState<{ ok: boolean; texto: string } | null>(null)
@@ -42,12 +43,12 @@ export function Cuenta() {
 
       {perfil.demo && (
         <div className="mt-4 rounded-xl border border-linea p-4">
-          <p className="text-gris">Consultas de prueba</p>
+          <p className="text-gris">Empresas vistas en tu demo</p>
           <p className="num mt-1 text-[28px] leading-9">
             {prueba ? n(prueba.usadas) : '—'}
-            <span className="text-sm text-gris-2"> /{n(perfil.limite_consultas)}</span>
+            <span className="text-sm text-gris-2"> /{n(perfil.demo_empresas)}</span>
           </p>
-          <p className="mt-2">Para ver todos los resultados, correos y teléfonos completos, escríbele a tu asesor de NexoMx.</p>
+          <p className="mt-2">Para ver todas las empresas con sus correos y teléfonos, escríbele a tu asesor de NexoMx.</p>
         </div>
       )}
 

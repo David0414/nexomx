@@ -1,9 +1,10 @@
-import { BarChart3, BookUser, Building2, House, LogOut, Search, Star, UserRound, Users, type LucideIcon } from 'lucide-react'
+import { BarChart3, BookUser, Building2, Clock, House, LogOut, Search, Star, UserRound, Users, type LucideIcon } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { modoDemo } from '../lib/api'
 import { ProveedorFavoritos } from '../lib/favoritos'
 import { usePerfil, useSesion } from '../lib/sesion'
+import type { EstadoDemo } from '../lib/types'
 
 interface Destino {
   to: string
@@ -150,12 +151,21 @@ function Buscador({ grande }: { grande?: boolean }) {
   )
 }
 
-function AvisoPrueba() {
-  const { api } = useSesion()
-  const [estado, setEstado] = useState<{ usadas: number; limite: number } | null>(null)
+function reloj(segundos: number) {
+  const minutos = Math.floor(segundos / 60)
+  return `${minutos}:${String(segundos % 60).padStart(2, '0')}`
+}
+
+function AvisoDemo() {
+  const { api, salir } = useSesion()
+  const [estado, setEstado] = useState<EstadoDemo | null>(null)
+  const [restante, setRestante] = useState<number | null>(null)
 
   const refrescar = useCallback(() => {
-    api.demoEstado().then(setEstado).catch(() => setEstado(null))
+    api.demoEstado().then((nuevo) => {
+      setEstado(nuevo)
+      setRestante(nuevo.restante)
+    }).catch(() => {})
   }, [api])
 
   useEffect(() => {
@@ -164,14 +174,33 @@ function AvisoPrueba() {
     return () => window.removeEventListener('nexo:consulta', refrescar)
   }, [refrescar])
 
-  if (!estado) return null
-  const quedan = Math.max(estado.limite - estado.usadas, 0)
+  useEffect(() => {
+    const id = setInterval(() => setRestante((r) => (r === null ? r : Math.max(r - 1, 0))), 1000)
+    return () => clearInterval(id)
+  }, [])
 
+  if (!estado || restante === null) return null
+
+  if (restante === 0) {
+    return (
+      <div role="alertdialog" aria-labelledby="fin-demo" className="fixed inset-0 z-50 grid place-items-center bg-obsidiana px-6 text-white">
+        <div className="w-full max-w-sm">
+          <img src="/nexomx-logo-oscuro.svg" alt="NexoMx" className="h-7" />
+          <h1 id="fin-demo" className="mt-8 text-[26px] leading-8 font-semibold">Tu demo terminó</h1>
+          <p className="mt-2 text-base leading-6 text-jade-100">
+            Para ver todas las empresas con sus correos y teléfonos, escríbele a tu asesor de NexoMx y activa tu cuenta.
+          </p>
+          <button type="button" onClick={salir} className="boton mt-6 h-12 w-full">Salir</button>
+        </div>
+      </div>
+    )
+  }
+
+  const quedan = Math.max(estado.limite - estado.usadas, 0)
   return (
-    <div role="status" className={`px-4 py-2 text-[13px] leading-5 font-medium md:px-6 ${quedan ? 'bg-jade-50 text-jade-700' : 'bg-aviso-bg text-aviso-tinta'}`}>
-      {quedan
-        ? <>Cuenta de prueba: te {quedan === 1 ? 'queda 1 consulta' : `quedan ${quedan} consultas`} de {estado.limite}.</>
-        : 'Terminaste tus consultas de prueba. Escríbele a tu asesor de NexoMx para activar tu cuenta.'}
+    <div role="status" className="sticky top-0 z-20 flex items-center justify-between gap-3 bg-jade-500 px-4 py-2 text-[13px] leading-5 font-medium text-white md:px-6">
+      <span>{quedan === 1 ? 'Te queda 1 empresa' : `Te quedan ${quedan} empresas`} de {estado.limite}</span>
+      <span className="num flex items-center gap-1.5 font-semibold"><Clock size={14} aria-hidden /> {reloj(restante)}</span>
     </div>
   )
 }
@@ -212,7 +241,7 @@ export function Marco() {
       )}
 
       <main ref={principal} className="min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-t-[18px] bg-papel lg:mr-2 lg:mb-2 lg:rounded-2xl">
-        {perfil.demo && <AvisoPrueba />}
+        {perfil.demo && <AvisoDemo />}
         <ProveedorFavoritos>
           <Outlet />
         </ProveedorFavoritos>

@@ -2,7 +2,7 @@ import { ChevronLeft, ChevronRight, Lock, Mail, Phone, SlidersHorizontal, X } fr
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Copiar, ErrorBloque, Pestanas, Ventana } from '../components/Comunes'
-import { BotonFavorito, enmascarado, FichaEmpresa, LogoEmpresa, RejillaCarga, TarjetaEmpresa, telefonoParaLlamar } from '../components/Empresa'
+import { BotonFavorito, FichaEmpresa, LogoEmpresa, RejillaCarga, TarjetaEmpresa, telefonoParaLlamar } from '../components/Empresa'
 import { LeyendaMapa, MapaEstados } from '../components/MapaEstados'
 import { ErrorApp, TAM_PAGINA } from '../lib/api'
 import { n, plural } from '../lib/formato'
@@ -131,31 +131,29 @@ function ListaPersonas({ filas, cargando, alAbrir }: {
   return (
     <ul className="flex flex-col gap-3 md:hidden">
       {filas.map((c) => {
-        const correoVisible = c.correo && !enmascarado(c.correo)
-        const telefonoVisible = c.telefono && !enmascarado(c.telefono)
-        const oculto = (c.correo && !correoVisible) || (c.telefono && !telefonoVisible)
+        const oculta = Boolean(c.bloqueada)
+        const borroso = oculta ? 'borroso' : ''
         return (
           <li key={c.id} className="rounded-xl border border-linea p-3.5">
             <div className="flex gap-3">
               <LogoEmpresa nombre={c.empresa} web={c.web} tam={44} />
               <button type="button" onClick={() => alAbrir(c.empresa_id)} className="min-w-0 flex-1 cursor-pointer text-left active:opacity-70">
-                <p className="truncate text-[15px] leading-5 font-semibold">{c.nombre ?? c.empresa}</p>
-                <p className="truncate text-[13px] leading-[18px] text-gris">{c.puesto ?? nombreArea(c.area)}</p>
+                <p aria-hidden={oculta} className={`truncate text-[15px] leading-5 font-semibold ${borroso}`}>{c.nombre ?? c.empresa}</p>
+                <p aria-hidden={oculta} className={`truncate text-[13px] leading-[18px] text-gris ${borroso}`}>{c.puesto ?? nombreArea(c.area)}</p>
                 <p className="mt-1 truncate text-[13px] leading-[18px] font-medium">{c.empresa}</p>
                 <p className="truncate text-xs leading-4 text-gris">{c.estado}{c.giro !== 'sin_clasificar' && ` · ${nombreGiro(c.giro)}`}</p>
               </button>
               <div className="-mt-1.5 -mr-1.5"><BotonFavorito id={c.empresa_id} nombre={c.empresa} /></div>
             </div>
 
-            {oculto ? (
-              <p className="mt-3 flex items-center gap-2 rounded-[10px] bg-tenue px-3 py-2.5 text-[13px] leading-[18px] text-gris">
-                <Lock size={14} className="flex-none" aria-hidden />
-                <span className="min-w-0 truncate">{c.correo ?? c.telefono}</span>
-              </p>
-            ) : (correoVisible || telefonoVisible) && (
+            {oculta ? (
+              <button type="button" onClick={() => alAbrir(c.empresa_id)} className="accion mt-3 w-full cursor-pointer">
+                <Lock size={15} aria-hidden /> Ver esta empresa
+              </button>
+            ) : (c.correo || c.telefono) && (
               <div className="mt-3 flex gap-2">
-                {telefonoVisible && <a href={`tel:${telefonoParaLlamar(c.telefono!)}`} className="accion"><Phone size={16} aria-hidden /> Llamar</a>}
-                {correoVisible && <a href={`mailto:${c.correo}`} className="accion"><Mail size={16} aria-hidden /> Correo</a>}
+                {c.telefono && <a href={`tel:${telefonoParaLlamar(c.telefono)}`} className="accion"><Phone size={16} aria-hidden /> Llamar</a>}
+                {c.correo && <a href={`mailto:${c.correo}`} className="accion"><Mail size={16} aria-hidden /> Correo</a>}
               </div>
             )}
           </li>
@@ -196,13 +194,20 @@ function TablaPersonas({ filas, cargando, alAbrir }: {
                 </div>
               </td>
               <td className="pr-4">
-                <p className="truncate font-medium">{c.nombre ?? <span className="text-gris-2">—</span>}</p>
-                <p className="truncate text-xs text-gris">{c.puesto ?? nombreArea(c.area)}</p>
+                <p aria-hidden={c.bloqueada} className={`truncate font-medium ${c.bloqueada ? 'borroso' : ''}`}>{c.nombre ?? <span className="text-gris-2">—</span>}</p>
+                <p aria-hidden={c.bloqueada} className={`truncate text-xs text-gris ${c.bloqueada ? 'borroso' : ''}`}>{c.puesto ?? nombreArea(c.area)}</p>
               </td>
               <td>
                 {c.correo ? (
                   <div className="flex items-center gap-0.5">
-                    {enmascarado(c.correo) ? <span className="truncate">{c.correo}</span> : (
+                    {c.bloqueada ? (
+                      <>
+                        <span aria-hidden className="borroso min-w-0 flex-1 truncate">{c.correo}</span>
+                        <button type="button" onClick={() => alAbrir(c.empresa_id)} className="ml-2 flex flex-none cursor-pointer items-center gap-1 font-medium text-jade-500 hover:underline">
+                          <Lock size={13} aria-hidden /> Ver empresa
+                        </button>
+                      </>
+                    ) : (
                       <>
                         <a href={`mailto:${c.correo}`} className="truncate hover:text-jade-500">{c.correo}</a>
                         <Copiar texto={c.correo} etiqueta="correo" />
@@ -210,7 +215,7 @@ function TablaPersonas({ filas, cargando, alAbrir }: {
                     )}
                   </div>
                 ) : <p className="text-gris-2">—</p>}
-                <p className="num truncate text-xs text-gris">
+                <p aria-hidden={c.bloqueada} className={`num truncate text-xs text-gris ${c.bloqueada ? 'borroso' : ''}`}>
                   {c.telefono ?? '—'}{c.telefono_directo ? ' · directo' : ''}
                 </p>
               </td>
@@ -333,7 +338,7 @@ export function Directorio() {
 
       <div className="mt-4 grid gap-6 xl:grid-cols-[minmax(0,1fr)_384px]">
         <div className="min-w-0">
-          <div className="sin-barra sticky top-0 z-10 -mx-4 mb-3 flex items-center gap-2 overflow-x-auto bg-papel px-4 py-2 md:static md:mx-0 md:px-0 md:py-0">
+          <div className={`sin-barra sticky ${perfil.demo ? 'top-9' : 'top-0'} z-10 -mx-4 mb-3 flex items-center gap-2 overflow-x-auto bg-papel px-4 py-2 md:static md:mx-0 md:px-0 md:py-0`}>
             <button type="button" className="filtro xl:hidden" onClick={() => setMapaAbierto(true)}>
               <SlidersHorizontal size={15} aria-hidden /> Filtros
               {cuantosFiltros > 0 && <span className="num grid size-5 place-items-center rounded-full bg-jade-500 text-xs font-semibold text-white">{cuantosFiltros}</span>}
@@ -387,15 +392,12 @@ export function Directorio() {
 
           {total > 0 && !error && (
             <div className="mt-3 flex items-center justify-between border-t border-regla pt-3">
-              <p className="num text-gris">
-                {n(desde)}–{n(hasta)} de {n(total)}
-                {perfil.demo && hasta < total && <span className="block text-xs">Con tu cuenta ves todos los resultados</span>}
-              </p>
+              <p className="num text-gris">{n(desde)}–{n(hasta)} de {n(total)}</p>
               <div className="flex gap-2">
                 <button type="button" aria-label="Página anterior" className="boton w-11 px-0 md:w-9" disabled={pagina === 0} onClick={() => setPagina((p) => p - 1)}>
                   <ChevronLeft size={16} />
                 </button>
-                <button type="button" aria-label="Página siguiente" className="boton w-11 px-0 md:w-9" disabled={hasta >= total || perfil.demo} onClick={() => setPagina((p) => p + 1)}>
+                <button type="button" aria-label="Página siguiente" className="boton w-11 px-0 md:w-9" disabled={hasta >= total} onClick={() => setPagina((p) => p + 1)}>
                   <ChevronRight size={16} />
                 </button>
               </div>

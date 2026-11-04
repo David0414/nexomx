@@ -1,12 +1,12 @@
-import { Factory, Globe, Mail, MapPin, Phone, Star } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { Factory, Globe, Lock, Mail, MapPin, Phone, Star } from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
 import { modoDemo } from '../lib/api'
 import { useFavoritos } from '../lib/favoritos'
 import { hostDe, plural, urlDe } from '../lib/formato'
 import { SIN_ESTADO } from '../lib/mexico'
 import { usePerfil, useSesion } from '../lib/sesion'
 import { nombreArea, nombreGiro } from '../lib/types'
-import type { DetalleEmpresa, EmpresaResumen } from '../lib/types'
+import type { DetalleEmpresa, EmpresaResumen, EstadoDemo } from '../lib/types'
 import { Copiar, ErrorBloque, Ventana } from './Comunes'
 
 const COLORES = ['#0a6b58', '#1f4e8c', '#8a5a00', '#9c2f45', '#2f5d3a', '#3d4f5c']
@@ -48,9 +48,6 @@ function urlLogo(web: string) {
   if (modoDemo) return logoDemo(dominio)
   return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(dominio)}&sz=128`
 }
-
-// Datos ocultos por la cuenta de prueba: no se pueden copiar, llamar ni escribir.
-export const enmascarado = (texto: string) => texto.includes('***')
 
 export const telefonoParaLlamar = (telefono: string) => telefono.split(/[,;/]/)[0].replace(/[^\d+]/g, '')
 
@@ -137,7 +134,7 @@ export function TarjetaEmpresa({ empresa, alAbrir }: { empresa: EmpresaResumen; 
         <p className="mt-0.5 truncate text-[13px] text-gris">{empresa.estado}{empresa.giro !== 'sin_clasificar' && ` · ${nombreGiro(empresa.giro)}`}</p>
         <p className="num mt-1 text-[13px]">
           {plural(empresa.num_contactos, 'persona', 'personas')}
-          {empresa.telefono && <span className="text-gris"> · {empresa.telefono}</span>}
+          {empresa.telefono && <span className="text-gris"> · <span aria-hidden={empresa.bloqueada} className={empresa.bloqueada ? 'borroso' : ''}>{empresa.telefono}</span></span>}
         </p>
       </div>
       <div className="absolute top-0.5 right-0.5 z-10 md:top-2 md:right-2">
@@ -147,15 +144,56 @@ export function TarjetaEmpresa({ empresa, alAbrir }: { empresa: EmpresaResumen; 
   )
 }
 
+function Desbloquear({ id, alListo }: { id: number; alListo: () => void }) {
+  const { api } = useSesion()
+  const [estado, setEstado] = useState<EstadoDemo | null>(null)
+  const [error, setError] = useState('')
+  const [enviando, setEnviando] = useState(false)
+
+  useEffect(() => {
+    api.demoEstado().then(setEstado).catch(() => {})
+  }, [api])
+
+  const quedan = estado ? Math.max(estado.limite - estado.usadas, 0) : null
+
+  const abrir = async () => {
+    setEnviando(true)
+    setError('')
+    try {
+      await api.demoDesbloquear(id)
+      alListo()
+    } catch (e) {
+      setError((e as Error).message)
+      setEnviando(false)
+    }
+  }
+
+  return (
+    <div className="mb-5 rounded-xl bg-jade-50 p-3.5">
+      <p className="flex items-center gap-2 font-semibold text-jade-700"><Lock size={15} aria-hidden /> Contactos ocultos</p>
+      {quedan === 0
+        ? <p className="mt-1 text-jade-700">Ya usaste todas las empresas de tu demo. Escríbele a tu asesor para activar tu cuenta.</p>
+        : (
+          <button type="button" disabled={enviando || quedan === null} onClick={abrir} className="boton boton-primario mt-2.5 h-11 w-full">
+            {enviando ? 'Abriendo…' : `Ver esta empresa · ${quedan === 1 ? 'te queda 1' : `te quedan ${quedan ?? ''}`}`}
+          </button>
+        )}
+      {error && <p role="alert" className="mt-2 text-alerta">{error}</p>}
+    </div>
+  )
+}
+
 export function FichaEmpresa({ id, alCerrar }: { id: number; alCerrar: () => void }) {
   const { api } = useSesion()
   const [detalle, setDetalle] = useState<DetalleEmpresa | null>(null)
   const [error, setError] = useState('')
 
-  useEffect(() => {
+  const cargar = useCallback(() => {
     api.detalle(id).then(setDetalle).catch((e: Error) => setError(e.message))
       .finally(() => window.dispatchEvent(new Event('nexo:consulta')))
   }, [api, id])
+
+  useEffect(cargar, [cargar])
 
   const empresa = detalle?.empresa
 
@@ -176,9 +214,11 @@ export function FichaEmpresa({ id, alCerrar }: { id: number; alCerrar: () => voi
             <BotonFavorito id={empresa.id} nombre={empresa.nombre} conTexto />
           </div>
 
-          {(empresa.telefono && !enmascarado(empresa.telefono)) || empresa.web ? (
+          {detalle.bloqueada && <Desbloquear id={empresa.id} alListo={cargar} />}
+
+          {!detalle.bloqueada && (empresa.telefono || empresa.web) ? (
             <div className="mb-5 flex gap-2 sm:hidden">
-              {empresa.telefono && !enmascarado(empresa.telefono) && (
+              {empresa.telefono && (
                 <a href={`tel:${telefonoParaLlamar(empresa.telefono)}`} className="accion"><Phone size={16} aria-hidden /> Llamar</a>
               )}
               {empresa.web && (
@@ -205,7 +245,7 @@ export function FichaEmpresa({ id, alCerrar }: { id: number; alCerrar: () => voi
               <div className="flex items-center gap-2.5">
                 <dt><Phone size={14} className="text-gris" aria-label="Teléfono" /></dt>
                 <dd className="num flex items-center gap-0.5">
-                  {enmascarado(empresa.telefono) ? empresa.telefono : (
+                  {detalle.bloqueada ? <span aria-hidden className="borroso">{empresa.telefono}</span> : (
                     <>
                       <a href={`tel:${telefonoParaLlamar(empresa.telefono)}`}>{empresa.telefono}</a>
                       <Copiar texto={empresa.telefono} etiqueta="teléfono" />
@@ -235,12 +275,13 @@ export function FichaEmpresa({ id, alCerrar }: { id: number; alCerrar: () => voi
           <ul>
             {detalle.contactos.map((c) => (
               <li key={c.id} className="border-t border-regla py-3 first:border-t-0">
-                <p className="font-medium">{c.nombre ?? 'Sin nombre'}</p>
-                <p className="text-gris">{c.puesto ?? nombreArea(c.area)}</p>
+                <p className={`font-medium ${detalle.bloqueada ? 'borroso' : ''}`} aria-hidden={detalle.bloqueada}>{c.nombre ?? 'Sin nombre'}</p>
+                <p className={`text-gris ${detalle.bloqueada ? 'borroso' : ''}`} aria-hidden={detalle.bloqueada}>{c.puesto ?? nombreArea(c.area)}</p>
+                {detalle.bloqueada && <span className="sr-only">Contacto oculto</span>}
                 {c.correo && (
                   <p className="mt-1 flex min-w-0 items-center gap-2">
                     <Mail size={14} className="flex-none text-gris" aria-hidden />
-                    {enmascarado(c.correo) ? <span className="truncate">{c.correo}</span> : (
+                    {detalle.bloqueada ? <span aria-hidden className="borroso truncate">{c.correo}</span> : (
                       <>
                         <a href={`mailto:${c.correo}`} className="truncate hover:text-jade-500">{c.correo}</a>
                         <Copiar texto={c.correo} etiqueta="correo" />
@@ -252,7 +293,7 @@ export function FichaEmpresa({ id, alCerrar }: { id: number; alCerrar: () => voi
                   <p className="num mt-1 flex items-center gap-2">
                     <Phone size={14} className="flex-none text-gris" aria-hidden />
                     {c.telefono_directo}
-                    {!enmascarado(c.telefono_directo) && <Copiar texto={c.telefono_directo} etiqueta="teléfono" />}
+                    <Copiar texto={c.telefono_directo} etiqueta="teléfono" />
                   </p>
                 )}
               </li>
