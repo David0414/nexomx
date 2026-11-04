@@ -1,0 +1,8 @@
+*.xlsx
+.env
+.env.*
+scripts
+supabase
+.taste-skill
+.npm-cache
+.tmp

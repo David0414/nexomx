@@ -1,0 +1,193 @@
+@import "tailwindcss";
+@import "@fontsource/ibm-plex-sans/400.css";
+@import "@fontsource/ibm-plex-sans/500.css";
+@import "@fontsource/ibm-plex-sans/600.css";
+@import "@fontsource/ibm-plex-mono/500.css";
+
+/* Paleta NexoMx: materiales de México. Ver brand/paleta.md */
+@theme {
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  --color-obsidiana: #101917;
+  --color-obsidiana-2: #1b2623;
+  --color-cantera: #e7ecea;
+  --color-cantera-2: #d5dcd9;
+  --color-papel: #ffffff;
+  --color-tenue: #f0f3f1;
+  --color-linea: #c9d3ce;
+  --color-regla: #dde3e0;
+  --color-control: #8e9c96;
+  --color-gris: #2f3a36;
+  --color-gris-2: #43504b;
+
+  --color-jade-50: #d3eee5;
+  --color-jade-100: #9fd9c7;
+  --color-jade-200: #56bfa3;
+  --color-jade-300: #11806a;
+  --color-jade-500: #0b6e5b;
+  --color-jade-700: #053d32;
+  --color-jade-claro: #5cc9b0;
+
+  --color-cempasuchil: #e8930c;
+
+  --color-alerta: #b3261e;
+  --color-alerta-bg: #fbd0cb;
+  --color-alerta-tinta: #6b0f09;
+  --color-aviso-bg: #ffe2a8;
+  --color-aviso-tinta: #5a3400;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background: var(--color-obsidiana);
+  color: var(--color-obsidiana);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 20px;
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-jade-500);
+  outline-offset: 1px;
+}
+
+::selection {
+  background: var(--color-jade-100);
+}
+
+dialog::backdrop {
+  background: rgb(16 25 23 / 0.4);
+}
+
+@layer components {
+  .num {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .boton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 36px;
+    padding: 0 14px;
+    border-radius: 6px;
+    border: 1px solid var(--color-control);
+    background: var(--color-papel);
+    color: var(--color-obsidiana);
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 120ms, transform 80ms;
+  }
+  .boton:hover {
+    background: var(--color-cantera);
+  }
+  .boton:active {
+    transform: translateY(1px);
+  }
+  .boton:disabled {
+    color: var(--color-gris-2);
+    background: var(--color-tenue);
+    cursor: not-allowed;
+  }
+  .boton-primario {
+    background: var(--color-jade-500);
+    border-color: var(--color-jade-500);
+    color: #fff;
+    font-weight: 600;
+  }
+  .boton-primario:hover {
+    background: var(--color-jade-700);
+  }
+  .boton-primario:disabled {
+    background: var(--color-gris-2);
+    border-color: var(--color-gris-2);
+    color: #fff;
+  }
+  .boton-peligro {
+    color: var(--color-alerta);
+    border-color: var(--color-alerta);
+  }
+  .boton-peligro:hover {
+    background: var(--color-alerta-bg);
+  }
+
+  .campo {
+    width: 100%;
+    height: 40px;
+    padding: 0 12px;
+    border-radius: 6px;
+    border: 1px solid var(--color-control);
+    background: var(--color-papel);
+  }
+  .campo::placeholder {
+    color: var(--color-gris-2);
+  }
+  .etiqueta {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+
+  .pastilla {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    height: 22px;
+    padding: 0 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .filtro {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 10px;
+    border-radius: 6px;
+    border: 1px solid var(--color-control);
+    background: var(--color-papel);
+    font-size: 13px;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 120ms;
+  }
+  .filtro:hover {
+    background: var(--color-cantera);
+  }
+  .filtro[aria-pressed="true"],
+  .filtro-activo {
+    background: var(--color-jade-500);
+    border-color: var(--color-jade-500);
+    color: #fff;
+    font-weight: 500;
+  }
+  .filtro[aria-pressed="true"]:hover,
+  .filtro-activo:hover {
+    background: var(--color-jade-700);
+  }
+
+  .hueso {
+    display: block;
+    border-radius: 4px;
+    background: var(--color-cantera);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}

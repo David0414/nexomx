@@ -1,0 +1,11 @@
+node_modules
+dist
+.env
+.env.*
+!.env.example
+.taste-skill
+.vercel
+# Los datos nunca van al repositorio
+*.xlsx
+.npm-cache
+.tmp
